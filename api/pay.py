@@ -129,11 +129,17 @@ def extract():
 # PAY_TO yoksa middleware HIC kurulmaz: uc acik kalmaz, 503 doner.
 # Boylece "adres unutuldu" durumu bedava cikarim servisine donusmez.
 
+# Bazaar kesif uzantisi agir dogrulama zinciri cekiyor (idna + ek modüller).
+# Vercel'de korumali istekte surec iz birakmadan oluyordu; kapatilabilir yapildi
+# ki odeme katmani uzantidan bagimsiz test edilebilsin.
+BAZAAR = os.environ.get("X402_BAZAAR", "1").strip() not in ("0", "false", "no")
+
 if PAY_TO:
     app.post("/x402/extract")(extract)
 
     from x402 import x402ResourceServerSync
-    from x402.extensions.bazaar import OutputConfig, declare_discovery_extension
+    if BAZAAR:
+        from x402.extensions.bazaar import OutputConfig, declare_discovery_extension
     from x402.http import FacilitatorConfig, HTTPFacilitatorClientSync
     from x402.http.middleware.flask import payment_middleware
     from x402.http.types import PaymentOption, RouteConfig
@@ -168,7 +174,7 @@ if PAY_TO:
             service_name="Fieldcast",
             tags=["documents", "pdf", "extraction", "invoices", "json"],
             mime_type="application/json",
-            extensions=discovery_extension_for_post(
+            extensions=(discovery_extension_for_post(
                 body_type="json",
                 input={
                     "text": "INVOICE #2026-114\nDate: 14 August 2026\nSubtotal: 1200.00\nTotal: 1416.00",
@@ -201,7 +207,7 @@ if PAY_TO:
                         "chars_processed": 78,
                     }
                 ),
-            ),
+            ) if BAZAAR else None),
         )
     }
 

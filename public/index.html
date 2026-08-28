@@ -67,10 +67,10 @@
   </div>
 
   <h2 id="agents">Pay-per-call for AI agents</h2>
-  <p class="lede" style="font-size:17px">Fieldcast also exposes an <strong>x402</strong> endpoint: no signup, no API key. An agent calls it, receives HTTP 402 with payment terms, pays in USDC on Base, and gets the extraction back in the same flow.</p>
+  <p class="lede" style="font-size:17px">Fieldcast also exposes an <strong>x402</strong> endpoint: no signup, no API key. An agent calls it, receives HTTP 402 with payment terms, pays in USDC, and gets the extraction back in the same flow. Live on Base Sepolia (a test network) today.</p>
   <div class="grid">
     <div class="card"><h3>No account needed</h3><p>An autonomous agent cannot fill in a signup form. It can pay per call.</p></div>
-    <div class="card"><h3>USDC on Base</h3><p>Settlement in cents, not invoices. $0.01 per extraction.</p></div>
+    <div class="card"><h3>Settlement in cents</h3><p>$0.01 per extraction. Running on Base Sepolia, a test network — mainnet is not enabled yet.</p></div>
     <div class="card"><h3>Discoverable</h3><p>Declared to the x402 Bazaar so agents searching for document extraction can find it on their own.</p></div>
   </div>
 
@@ -81,7 +81,7 @@
       <tr><td><strong>Free</strong><br><span class="note">While in beta</span></td><td>50 / month</td><td><strong>$0</strong></td></tr>
       <tr><td><strong>Starter</strong></td><td>1,000 / month</td><td><strong>$19</strong><small> /mo</small></td></tr>
       <tr><td><strong>Pro</strong></td><td>5,000 / month</td><td><strong>$49</strong><small> /mo</small></td></tr>
-      <tr><td><strong>Agents (x402)</strong></td><td>Unmetered</td><td><strong>$0.01</strong><small> /call, USDC on Base</small></td></tr>
+      <tr><td><strong>Agents (x402)</strong></td><td>Unmetered</td><td><strong>$0.01</strong><small> /call &middot; Base Sepolia testnet</small></td></tr>
     </tbody>
   </table></div>
   <p class="note">Every plan uses the same endpoint and the same extraction engine. No feature is held back behind a higher tier.</p>
@@ -91,7 +91,7 @@
   <details><summary>What file types are supported?</summary><p>PDF and plain text today. PDFs are converted to text server-side before extraction. Scanned image-only documents need OCR, which is not yet available.</p></details>
   <details><summary>What happens if a field is missing from the document?</summary><p>It is returned as <code>null</code>. Fieldcast does not invent values to fill a schema, because a plausible wrong total is more expensive than a missing one.</p></details>
   <details><summary>How accurate is it?</summary><p>On the reference test — a ten-field invoice — all ten fields were extracted correctly, with dates normalised to ISO-8601 and monetary values returned as numbers. Accuracy on your own documents should be measured on your own documents, which is what the free tier is for.</p></details>
-  <details><summary>Can an AI agent use Fieldcast without an account?</summary><p>Yes. The x402 endpoint requires no API key. The agent receives payment terms as an HTTP 402 response, settles in USDC on Base, and receives the extraction in the same request flow.</p></details>
+  <details><summary>Can an AI agent use Fieldcast without an account?</summary><p>Yes. The x402 endpoint requires no API key. The agent receives payment terms as an HTTP 402 response, settles in USDC, and receives the extraction in the same request flow. It runs on Base Sepolia today, a test network, so the payment is not real money yet.</p></details>
   <details><summary>Is my document stored?</summary><p>Document contents are not persisted. Only a usage counter — API key, month, call count, character count — is recorded for billing.</p></details>
 
 </main>

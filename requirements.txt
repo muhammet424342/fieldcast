@@ -1,3 +1,8 @@
 flask==3.0.3
 pdfplumber==0.11.4
-x402==2.20.0
+# Bazaar uzantisi idna'ya, facilitator istemcisi httpx'e bagli. Ikisi de
+# yerelde baska paketler uzerinden geliyordu; Vercel'de acikca istenmezse
+# fonksiyon calisma aninda iz birakmadan oluyor.
+x402[extensions]==2.20.0
+httpx>=0.27
+idna>=3.6

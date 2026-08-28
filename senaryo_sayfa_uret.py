@@ -6,8 +6,9 @@ Bunlar "benim isim icin ne yapiyor" sorusuna cevap veriyor - dizin
 linklerinden gelen trafigin inecegi ikinci hedef.
 
 Kural: sadece OLCULEN iddia. Musteri sayisi 0, o yuzden referans/vaka yok.
-x402 ucu CANLI DEGIL -> ajan sayfasinda satis argumani yapilmiyor, durumu
-acikca yaziliyor. Olmayan ozelligi satmak ilk musteriyi kaybettirir.
+x402 ucu 29 Agu 2026'da Base Sepolia'da CANLIYA ALINDI. Testnet oldugu ve
+mainnet'in KAPALI oldugu sayfada acikca yaziliyor - "gercek para kazaniyor"
+izlenimi verilmiyor. Olmayan ozelligi satmak ilk musteriyi kaybettirir.
 """
 import html
 import json
@@ -176,15 +177,18 @@ SENARYOLAR = [
             "It is a beta run by one developer, with no uptime guarantee.",
         ],
         "x402_notu": (
-            "An x402 endpoint — pay-per-call in USDC on Base with no account and no API key — is "
-            "written in the codebase but is <strong>not deployed yet</strong>, so it cannot be used "
-            "today. It is listed here as roadmap, not as a feature. Use the API-key endpoint for now."
+            "The x402 endpoint — pay-per-call with no account and no API key — is "
+            "<strong>live on Base Sepolia</strong>, which is a test network: the USDC an agent "
+            "settles there is not real money. It works today for integration and testing. "
+            "<strong>Base mainnet is not enabled</strong>, because the public x402 facilitator "
+            "only advertises test networks and mainnet settlement needs credentialed facilitator "
+            "access. Treat this as a working preview, not a revenue path."
         ),
         "sss": [
             ("Is there an MCP server?",
              "Not yet. Fieldcast is a plain HTTP endpoint today, which most agent frameworks wrap as a tool without difficulty. An MCP server is on the list but is not written, so do not plan around it."),
             ("Can an agent pay per call without an account?",
-             "Not today. The x402 endpoint exists in the codebase but has not been deployed and has no wallet configured, so agents currently need an API key like any other caller."),
+             "On Base Sepolia, yes — the endpoint is live and returns payment terms with no API key required. That is a test network, so the USDC involved is not real money. On Base mainnet, not yet."),
             ("What does the tool definition look like?",
              "Two parameters: the document (text or a file) and an array of field names. The response is a flat JSON object whose keys are exactly the field names you asked for, with null for anything absent. That stability is the point — the shape does not change between calls."),
         ],
