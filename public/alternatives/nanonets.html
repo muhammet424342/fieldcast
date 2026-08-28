@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nanonets alternative — Fieldcast</title>
+<meta name="description" content="Fieldcast compared with Nanonets. Nanonets is a workflow platform billed per block run; Fieldcast is a single extraction endpoint with a free tier and no platform to configure.">
+<link rel="canonical" href="https://fieldcast-peach.vercel.app/alternatives/nanonets">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<meta property="og:title" content="Nanonets alternative — Fieldcast">
+<meta property="og:description" content="Fieldcast compared with Nanonets. Nanonets is a workflow platform billed per block run; Fieldcast is a single extraction endpoint with a free tier and no platform to configure.">
+<meta property="og:image" content="https://fieldcast-peach.vercel.app/logo-1024.png">
+<meta property="og:type" content="article">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header><div class="wrap"><nav>
+  <a class="brand" href="/"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 2h8l4 4v16H6z" stroke="#4ade80" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 2v4h4" stroke="#4ade80" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 12h6M9 16h4" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/></svg> Fieldcast</a>
+  <a href="/#how">How it works</a>
+  <a href="/#pricing">Pricing</a>
+  <a href="/for/">Use cases</a>
+  <a href="/alternatives/">Comparisons</a>
+</nav></div></header>
+
+<main class="wrap">
+
+  <h1>Nanonets alternative when you want one endpoint, not a workflow platform</h1>
+  <p class="lede">Nanonets is genuinely capable, and considerably more than a parser: classification, routing, ERP connectors, compliance certifications, on-premise deployment. If you need a document operations platform, that breadth is the product.</p>
+  <p>Fieldcast is deliberately one endpoint. You POST a document and a list of field names, you get typed JSON back, and the orchestration stays in your own code where you can test and version it. There is no platform to learn, and no per-block cost model to reason about before you know what a request will cost.</p>
+
+  <h2>Side by side</h2>
+  <table>
+    <thead><tr><th></th><th>Fieldcast</th><th>Nanonets</th></tr></thead>
+    <tbody>
+      <tr><td>Approach</td><td>Field names sent with each request</td><td>A workflow platform. Each step is a block — extraction, classification, routing, export — and you compose them.</td></tr>
+      <tr><td>Setup before first extraction</td><td>None</td><td>You design a workflow out of blocks before documents flow through it.</td></tr>
+      <tr><td>Pricing</td><td>Free 50/mo · $19/mo for 1,000 · $49/mo for 5,000</td><td>Starts with $50 in free credits, then listed at $100/month for 100 credits, billed per block run with simple operations at $0.02 per run. Growth and Enterprise tiers are quote-based. Figures read from their pricing page on 26 August 2026.</td></tr>
+      <tr><td>Free tier</td><td>50 extractions/month, no card, no expiry</td><td>$50 in starting credits, no card. Not a recurring free tier.</td></tr>
+      <tr><td>Billing unit</td><td>One extraction per API call, regardless of page count</td><td>Per block run. Simple operations listed at $0.02 per run; complex AI blocks cost more.</td></tr>
+      <tr><td>OCR for scanned images</td><td>Not supported yet</td><td>Yes — including scanned and photographed documents.</td></tr>
+      <tr><td>Missing field behaviour</td><td>Returns null — never a fabricated value</td><td>Depends on the blocks in your workflow; the platform exposes confidence and review steps.</td></tr>
+    </tbody>
+  </table>
+  <p class="note">Nanonets figures were read from nanonets.com and public sources in August 2026 and may have changed since. Check their pricing page before deciding — and if anything here is out of date, email me and I will correct it.</p>
+
+  <div class="box">
+    <h2>Choose Nanonets instead if…</h2>
+    <ul>
+    <li>You need SOC 2 or HIPAA compliance, SAML SSO, or audit logging. Fieldcast has none of these.</li>
+    <li>You need on-premise or private-cloud deployment, or data residency guarantees.</li>
+    <li>You need SAP, Salesforce, or Oracle connectors and want them maintained for you.</li>
+    <li>You want the whole document workflow — classification, approval routing, export — rather than just extraction.</li>
+    </ul>
+    <p class="note" style="margin:0">These are real gaps, not false modesty. A comparison page that pretends the other product has no advantages is not worth reading.</p>
+  </div>
+
+  <h2>Choose Fieldcast if…</h2>
+  <ul>
+    <li>Your documents arrive in layouts you do not control and cannot enumerate in advance.</li>
+    <li>You want the extracted keys to match your own schema, not a vendor's field taxonomy.</li>
+    <li>A fabricated value would be worse than a missing one — Fieldcast returns <code>null</code> rather than guessing.</li>
+    <li>You want to test against your own documents before paying anything.</li>
+  </ul>
+
+  <h2>What was actually measured</h2>
+  <p class="muted">On a ten-field invoice, live in production: all ten fields correct in 1.8 seconds, dates normalised to ISO-8601, monetary values returned as numbers. On a receipt in a different currency and date format, every field correct and four fields that did not exist in the document returned as <code>null</code>. Accuracy on <em>your</em> documents should be measured on your documents — that is what the free tier is for.</p>
+
+  <h2>Questions</h2>
+  <details><summary>Can Fieldcast classify documents as well as extract from them?</summary><p>Not as a separate feature. You can approximate it by asking for a field like document_type in your field list, but there is no dedicated classification model. If classification is central to your workflow, Nanonets is built for it and Fieldcast is not.</p></details>
+  <details><summary>What does a request actually cost?</summary><p>One extraction, regardless of how many fields you request or how the document is structured. The free tier is 50 per month, Starter is $19 for 1,000, Pro is $49 for 5,000. There is no per-step pricing to model in advance.</p></details>
+
+  <h2>Try it against your own file</h2>
+  <p class="muted">Free tier is 50 extractions a month, no card, no sales call.</p>
+  <a class="cta" href="/#how">Read the quickstart</a>
+
+</main>
+
+<footer><div class="wrap">
+  <p>Fieldcast — document extraction API. <a href="/">Home</a> · <a href="/alternatives/">Comparisons</a> · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></p>
+  <p class="note">Nanonets is a trademark of its respective owner. This page is an independent comparison and is not affiliated with or endorsed by Nanonets.</p>
+</div></footer>
+
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Can Fieldcast classify documents as well as extract from them?", "acceptedAnswer": {"@type": "Answer", "text": "Not as a separate feature. You can approximate it by asking for a field like document_type in your field list, but there is no dedicated classification model. If classification is central to your workflow, Nanonets is built for it and Fieldcast is not."}}, {"@type": "Question", "name": "What does a request actually cost?", "acceptedAnswer": {"@type": "Answer", "text": "One extraction, regardless of how many fields you request or how the document is structured. The free tier is 50 per month, Starter is $19 for 1,000, Pro is $49 for 5,000. There is no per-step pricing to model in advance."}}]}</script>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fieldcast — Documents to structured JSON in one API call</title>
+<meta name="description" content="Fieldcast turns invoices, receipts and contracts into structured JSON with a single API call. You name the fields, it returns them typed. Free tier, no setup, no training data.">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:image" content="https://fieldcast-peach.vercel.app/logo-1024.png">
+<meta property="og:title" content="Fieldcast — Documents to structured JSON in one API call">
+<meta property="og:description" content="You name the fields, Fieldcast returns them typed. No templates, no training data.">
+<meta property="og:type" content="website">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header><div class="wrap"><nav>
+  <span class="brand">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 2h8l4 4v16H6z" stroke="#4ade80" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 2v4h4" stroke="#4ade80" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 12h6M9 16h4" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/></svg>
+    Fieldcast
+  </span>
+  <a href="#how">How it works</a>
+  <a href="#agents">For agents</a>
+  <a href="#pricing">Pricing</a>
+  <a href="/for/">Use cases</a>
+  <a href="/alternatives/">Comparisons</a>
+  <a href="#faq">FAQ</a>
+</nav></div></header>
+
+<main class="wrap">
+
+  <span class="tag">Free tier · No credit card</span>
+  <h1>Turn any document into structured JSON in one API call.</h1>
+  <p class="lede">You send a PDF or raw text and name the fields you want. Fieldcast returns them as typed JSON — numbers as numbers, dates normalised to ISO. No templates to draw, no training data to label, no model to fine-tune.</p>
+
+  <div class="cta">
+    <a class="btn btn-p" href="#how">Read the quickstart</a>
+    <a class="btn btn-s" href="#pricing">See pricing</a>
+  </div>
+  <p class="note">Built for invoices, receipts, purchase orders, contracts and statements.</p>
+
+  <h2 id="how">One request, one response</h2>
+  <p class="note">Name the fields. Get them back. That is the entire interface.</p>
+<pre><code>curl -X POST https://fieldcast-peach.vercel.app/v1/extract \
+  -H "X-API-Key: demo_key_public" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "INVOICE INV-2043 ... Date: 14 August 2026 ... Total: 1,240.50 EUR",
+    "fields": ["invoice_number", "date", "total", "currency"]
+  }'</code></pre>
+<pre><code>{
+  "invoice_number": "INV-2043",
+  "date": "2026-08-14",
+  "total": 1240.5,
+  "currency": "EUR"
+}</code></pre>
+  <p class="note">PDFs work the same way — post the file as multipart with <code>fields=a,b,c</code>. Any field the document does not contain comes back <code>null</code> rather than invented.</p>
+
+  <h2>Why teams pick it</h2>
+  <div class="grid">
+    <div class="card"><h3>No template drawing</h3><p>Template-based parsers break the moment a supplier changes their layout. Fieldcast reads the document, so a new layout is not a new project.</p></div>
+    <div class="card"><h3>Fields you choose</h3><p>Not a fixed invoice schema. Ask for up to 40 fields, named however your database already names them.</p></div>
+    <div class="card"><h3>It returns null, not a guess</h3><p>Missing data comes back as null. A parser that invents a total is worse than one that admits it did not find one.</p></div>
+    <div class="card"><h3>Typed output</h3><p>Totals come back as numbers, dates as ISO-8601. No downstream string cleanup.</p></div>
+  </div>
+
+  <h2 id="agents">Pay-per-call for AI agents</h2>
+  <p class="lede" style="font-size:17px">Fieldcast also exposes an <strong>x402</strong> endpoint: no signup, no API key. An agent calls it, receives HTTP 402 with payment terms, pays in USDC on Base, and gets the extraction back in the same flow.</p>
+  <div class="grid">
+    <div class="card"><h3>No account needed</h3><p>An autonomous agent cannot fill in a signup form. It can pay per call.</p></div>
+    <div class="card"><h3>USDC on Base</h3><p>Settlement in cents, not invoices. $0.01 per extraction.</p></div>
+    <div class="card"><h3>Discoverable</h3><p>Declared to the x402 Bazaar so agents searching for document extraction can find it on their own.</p></div>
+  </div>
+
+  <h2 id="pricing">Pricing</h2>
+  <div class="scroll-x"><table>
+    <thead><tr><th>Plan</th><th>Extractions</th><th>Price</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Free</strong><br><span class="note">While in beta</span></td><td>50 / month</td><td><strong>$0</strong></td></tr>
+      <tr><td><strong>Starter</strong></td><td>1,000 / month</td><td><strong>$19</strong><small> /mo</small></td></tr>
+      <tr><td><strong>Pro</strong></td><td>5,000 / month</td><td><strong>$49</strong><small> /mo</small></td></tr>
+      <tr><td><strong>Agents (x402)</strong></td><td>Unmetered</td><td><strong>$0.01</strong><small> /call, USDC on Base</small></td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Every plan uses the same endpoint and the same extraction engine. No feature is held back behind a higher tier.</p>
+
+  <h2 id="faq">Frequently asked questions</h2>
+  <details><summary>Do I have to define a template for each document layout?</summary><p>No. You pass a list of field names with the request. Fieldcast reads the document and returns those fields. A supplier changing their invoice layout does not require any change on your side.</p></details>
+  <details><summary>What file types are supported?</summary><p>PDF and plain text today. PDFs are converted to text server-side before extraction. Scanned image-only documents need OCR, which is not yet available.</p></details>
+  <details><summary>What happens if a field is missing from the document?</summary><p>It is returned as <code>null</code>. Fieldcast does not invent values to fill a schema, because a plausible wrong total is more expensive than a missing one.</p></details>
+  <details><summary>How accurate is it?</summary><p>On the reference test — a ten-field invoice — all ten fields were extracted correctly, with dates normalised to ISO-8601 and monetary values returned as numbers. Accuracy on your own documents should be measured on your own documents, which is what the free tier is for.</p></details>
+  <details><summary>Can an AI agent use Fieldcast without an account?</summary><p>Yes. The x402 endpoint requires no API key. The agent receives payment terms as an HTTP 402 response, settles in USDC on Base, and receives the extraction in the same request flow.</p></details>
+  <details><summary>Is my document stored?</summary><p>Document contents are not persisted. Only a usage counter — API key, month, call count, character count — is recorded for billing.</p></details>
+
+</main>
+
+<footer><div class="wrap">
+  <p>Fieldcast — document extraction API. <a href="/for/">Use cases</a> · <a href="/alternatives/">Comparisons</a> · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></p>
+  <p class="note">Built for <a href="/for/bookkeepers">bookkeepers</a>, <a href="/for/agencies">agencies</a> and <a href="/for/agent-builders">AI agent builders</a>.</p>
+  <p class="note">Compared with <a href="/alternatives/docparser">Docparser</a>, <a href="/alternatives/mindee">Mindee</a> and <a href="/alternatives/nanonets">Nanonets</a> — including where each of them is the better choice.</p>
+  <!-- AgentHunter dizin kaydinin sarti: karsilikli rozet (Dark Style).
+       Krem/amber varyant koyu footer'da goze batiyordu; siteyle uyumlu olani secildi.
+       Listeye alinmazsak bu blok kaldirilir. -->
+  <p style="margin-top:20px"><a href="https://www.agenthunter.io?utm_source=badge&amp;utm_medium=embed&amp;utm_campaign=Fieldcast" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);padding:8px 12px;border-radius:8px;text-decoration:none;line-height:1.25"><img src="https://www.agenthunter.io/logo-light.svg" alt="" width="22" height="22" style="height:22px;width:22px;opacity:.85"><span style="display:flex;flex-direction:column"><span style="font-size:11px;color:var(--mut);letter-spacing:.02em">AgentHunter</span><span style="font-size:13px;color:var(--fg);font-weight:600">Featured AI Agent</span></span></a></p>
+</div></footer>
+
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Fieldcast","applicationCategory":"DeveloperApplication","operatingSystem":"Any","description":"API that turns PDFs and text documents into structured JSON. Callers specify the fields they want and receive them typed, with missing fields returned as null.","offers":[{"@type":"Offer","name":"Free","price":"0","priceCurrency":"USD"},{"@type":"Offer","name":"Starter","price":"19","priceCurrency":"USD"},{"@type":"Offer","name":"Pro","price":"49","priceCurrency":"USD"}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"Do I have to define a template for each document layout?","acceptedAnswer":{"@type":"Answer","text":"No. You pass a list of field names with the request and Fieldcast reads the document and returns those fields. A supplier changing their invoice layout does not require any change on your side."}},
+{"@type":"Question","name":"What file types are supported?","acceptedAnswer":{"@type":"Answer","text":"PDF and plain text. PDFs are converted to text server-side before extraction. Scanned image-only documents need OCR, which is not yet available."}},
+{"@type":"Question","name":"What happens if a field is missing from the document?","acceptedAnswer":{"@type":"Answer","text":"It is returned as null. Fieldcast does not invent values to fill a schema."}},
+{"@type":"Question","name":"How accurate is it?","acceptedAnswer":{"@type":"Answer","text":"On the reference ten-field invoice test all ten fields were extracted correctly, with dates normalised to ISO-8601 and monetary values returned as numbers."}},
+{"@type":"Question","name":"Can an AI agent use Fieldcast without an account?","acceptedAnswer":{"@type":"Answer","text":"Yes. The x402 endpoint requires no API key. The agent receives payment terms as an HTTP 402 response, settles in USDC on Base, and receives the extraction in the same request flow."}},
+{"@type":"Question","name":"Is my document stored?","acceptedAnswer":{"@type":"Answer","text":"Document contents are not persisted. Only a usage counter is recorded for billing."}}]}
+</script>
+</body>
+</html>

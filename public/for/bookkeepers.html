@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fieldcast for bookkeepers &amp; accounts payable</title>
+<meta name="description" content="Fieldcast for bookkeepers and accounts payable teams: extract supplier, invoice number, dates, net, VAT and gross from any invoice layout as typed JSON. Free tier, no card.">
+<link rel="canonical" href="https://fieldcast-peach.vercel.app/for/bookkeepers">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<meta property="og:title" content="Fieldcast for bookkeepers &amp; accounts payable">
+<meta property="og:description" content="Fieldcast for bookkeepers and accounts payable teams: extract supplier, invoice number, dates, net, VAT and gross from any invoice layout as typed JSON. Free tier, no card.">
+<meta property="og:image" content="https://fieldcast-peach.vercel.app/logo-1024.png">
+<meta property="og:type" content="article">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header><div class="wrap"><nav>
+  <a class="brand" href="/"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 2h8l4 4v16H6z" stroke="#4ade80" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 2v4h4" stroke="#4ade80" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 12h6M9 16h4" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/></svg> Fieldcast</a>
+  <a href="/#how">How it works</a>
+  <a href="/#pricing">Pricing</a>
+  <a href="/for/">Use cases</a>
+  <a href="/alternatives/">Comparisons</a>
+</nav></div></header>
+
+<main class="wrap">
+
+  <p class="note" style="margin:40px 0 0">Bookkeepers &amp; accounts payable</p>
+  <h1>Supplier invoices into your ledger, without a parser per supplier</h1>
+  <p class="lede">Every supplier formats their invoice differently, and the ones who do not change it eventually will. If you are keying invoice totals in by hand, or maintaining a parser template per supplier, the work never actually finishes — it just moves.</p>
+  <p>Fieldcast takes the field names you want with each request. A new supplier with a layout nobody has seen before goes through the same call as the ones you already handle. Nothing to configure per vendor.</p>
+
+  <h2>What the call looks like</h2>
+  <p class="note">The fields below are an example for this use case. Yours can be any names you like, up to 40 per call.</p>
+<pre><code>{
+  "fields": [
+    &quot;supplier_name&quot;,
+    &quot;invoice_number&quot;,
+    &quot;invoice_date&quot;,
+    &quot;due_date&quot;,
+    &quot;net_amount&quot;,
+    &quot;vat_amount&quot;,
+    &quot;gross_amount&quot;,
+    &quot;currency&quot;,
+    &quot;po_number&quot;,
+    &quot;payment_terms&quot;
+  ]
+}</code></pre>
+  <p class="note">And what comes back:</p>
+<pre><code>{
+  &quot;supplier_name&quot;: &quot;ACME SUPPLIES LTD&quot;,
+  &quot;invoice_number&quot;: &quot;INV-2026-0431&quot;,
+  &quot;invoice_date&quot;: &quot;2026-08-14&quot;,
+  &quot;due_date&quot;: &quot;2026-09-13&quot;,
+  &quot;net_amount&quot;: 452.5,
+  &quot;vat_amount&quot;: 90.5,
+  &quot;gross_amount&quot;: 543.0,
+  &quot;currency&quot;: &quot;GBP&quot;,
+  &quot;po_number&quot;: null,
+  &quot;payment_terms&quot;: &quot;Net 30&quot;
+}</code></pre>
+
+  <h2>Why the details matter here</h2>
+  <h3>It says null instead of guessing</h3>
+  <p class="muted">There was no purchase order number on that invoice, so <code>po_number</code> came back <code>null</code>. In bookkeeping a missing value is a queue item; a confidently wrong total is a reconciliation problem you find three months later.</p>
+  <h3>Totals arrive as numbers</h3>
+  <p class="muted"><code>452.5</code>, not <code>"452,50 GBP"</code>. No thousands separators, no currency symbols glued to the figure, no locale guessing before it reaches your ledger.</p>
+  <h3>Dates arrive as ISO-8601</h3>
+  <p class="muted"><code>2026-08-14</code> whether the invoice said <em>14 August 2026</em>, <em>14/08/2026</em> or <em>08/14/2026</em>. The ambiguity is resolved before it becomes a wrong due date.</p>
+
+  <div class="box">
+    <h2>What it does not do</h2>
+    <ul>
+    <li>It does not read scanned or photographed invoices — PDF and text only, no OCR yet.</li>
+    <li>It does not push into Xero, QuickBooks or Sage. It returns JSON; the posting is your code.</li>
+    <li>It does not do three-way matching or approval routing.</li>
+    <li>It is not a certified system of record. Validate values before they hit your books.</li>
+    </ul>
+    <p class="note" style="margin:0">Listed plainly so you find out now rather than after integrating.</p>
+  </div>
+
+  <h2>Questions</h2>
+  <details><summary>What happens when a supplier changes their invoice layout?</summary><p>Nothing on your side. There is no stored template tied to that supplier, so a redesigned invoice goes through the same request as before.</p></details>
+  <details><summary>Can I get line items, not just totals?</summary><p>You can ask for a field like line_items and it will be returned, but structured repeating rows are the weakest part of any extraction system. Test it against your own invoices on the free tier before you depend on it.</p></details>
+  <details><summary>Is it accurate enough for accounting?</summary><p>On a ten-field invoice test, live in production, all ten fields were correct. That is one document, not a benchmark. The free tier is 50 extractions a month specifically so you can measure it on your own invoices instead of trusting that number.</p></details>
+
+  <h2>Test it on your own documents</h2>
+  <p class="muted">Free tier is 50 extractions a month, no card, no sales call. That is deliberately enough to check accuracy on real files before you commit to anything.</p>
+  <a class="cta" href="/#how">Read the quickstart</a>
+  <p class="note" style="margin-top:22px"><a href="/alternatives/docparser">Compared with Docparser</a> · <a href="/alternatives/mindee">Compared with Mindee</a></p>
+
+</main>
+
+<footer><div class="wrap">
+  <p>Fieldcast — document extraction API. <a href="/">Home</a> · <a href="/for/">Use cases</a> · <a href="/alternatives/">Comparisons</a> · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></p>
+</div></footer>
+
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What happens when a supplier changes their invoice layout?", "acceptedAnswer": {"@type": "Answer", "text": "Nothing on your side. There is no stored template tied to that supplier, so a redesigned invoice goes through the same request as before."}}, {"@type": "Question", "name": "Can I get line items, not just totals?", "acceptedAnswer": {"@type": "Answer", "text": "You can ask for a field like line_items and it will be returned, but structured repeating rows are the weakest part of any extraction system. Test it against your own invoices on the free tier before you depend on it."}}, {"@type": "Question", "name": "Is it accurate enough for accounting?", "acceptedAnswer": {"@type": "Answer", "text": "On a ten-field invoice test, live in production, all ten fields were correct. That is one document, not a benchmark. The free tier is 50 extractions a month specifically so you can measure it on your own invoices instead of trusting that number."}}]}</script>
+</body>
+</html>

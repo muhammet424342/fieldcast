@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Privacy Policy — Fieldcast</title>
+<meta name="description" content="What Fieldcast does and does not store when you send a document to the extraction API.">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body><div class="wrap">
+<h1>Privacy Policy</h1>
+<p class="upd">Last updated: 26 August 2026</p>
+
+<h2>Who operates this service</h2>
+<p>Fieldcast is operated by Muhammet Karakurt as an independent developer. Contact: <a href="mailto:muhammet@decaylabs.online">muhammet@decaylabs.online</a>.</p>
+
+<h2>What we do with the documents you send</h2>
+<p>Document content that you submit to <code>/v1/extract</code> is held in memory only for as long as it takes to produce the extraction, and is then discarded. Document text and uploaded files are <strong>not written to disk and not stored in any database</strong>.</p>
+
+<h2>What we do store</h2>
+<p>For quota enforcement and billing we record, per request: the API key used, the calendar month, a running call count, the number of fields requested, the number of characters processed, and whether the call succeeded. This record contains no document content.</p>
+
+<h2>Third-party processing</h2>
+<p>Extraction is performed by third-party large language model providers. The text of your document is transmitted to the provider that serves the request in order to produce the result. Requests are served by NVIDIA's hosted inference API; if it is unavailable, a request may fall back to DeepSeek. Your document is not used by Fieldcast for any other purpose. If your documents are subject to confidentiality obligations that prohibit third-party processing, do not send them to this service.</p>
+
+<h2>Hosting</h2>
+<p>The service is hosted on Vercel, which processes standard request metadata such as IP address and user agent as part of delivering the service.</p>
+
+<h2>Cookies and tracking</h2>
+<p>This website sets no cookies and runs no analytics or advertising trackers.</p>
+
+<h2>Payments</h2>
+<p>Agent requests made through the x402 endpoint are settled on the Base network. Blockchain transactions are public by nature; Fieldcast does not collect additional identity information from those callers.</p>
+
+<h2>Your rights</h2>
+<p>Because document content is not retained, there is nothing to export or erase beyond the usage counter tied to your API key. To have that counter and your key deleted, email the address above.</p>
+
+<h2>Changes</h2>
+<p>Material changes to this policy will be reflected in the "last updated" date above.</p>
+
+<p style="margin-top:40px"><a href="/">← Back to Fieldcast</a></p>
+</div></body>
+</html>

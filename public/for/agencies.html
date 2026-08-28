@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fieldcast for agencies &amp; freelance developers</title>
+<meta name="description" content="Fieldcast for agencies and freelance developers: one document extraction endpoint that adapts per client by changing a field list, not by building a new parser.">
+<link rel="canonical" href="https://fieldcast-peach.vercel.app/for/agencies">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<meta property="og:title" content="Fieldcast for agencies &amp; freelance developers">
+<meta property="og:description" content="Fieldcast for agencies and freelance developers: one document extraction endpoint that adapts per client by changing a field list, not by building a new parser.">
+<meta property="og:image" content="https://fieldcast-peach.vercel.app/logo-1024.png">
+<meta property="og:type" content="article">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header><div class="wrap"><nav>
+  <a class="brand" href="/"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 2h8l4 4v16H6z" stroke="#4ade80" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 2v4h4" stroke="#4ade80" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 12h6M9 16h4" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/></svg> Fieldcast</a>
+  <a href="/#how">How it works</a>
+  <a href="/#pricing">Pricing</a>
+  <a href="/for/">Use cases</a>
+  <a href="/alternatives/">Comparisons</a>
+</nav></div></header>
+
+<main class="wrap">
+
+  <p class="note" style="margin:40px 0 0">Agencies &amp; freelance developers</p>
+  <h1>One endpoint you can resell across every client, whatever their documents look like</h1>
+  <p class="lede">Client A wants purchase orders. Client B wants shipping manifests. Client C wants insurance claim forms. With a template-based parser each of those is a separate configuration project you have to build, bill for, and then maintain for years.</p>
+  <p>With Fieldcast the difference between those three clients is the contents of one array. Same endpoint, same integration code, different field names. What you built for the first client is most of what you ship to the third.</p>
+
+  <h2>What the call looks like</h2>
+  <p class="note">The fields below are an example for this use case. Yours can be any names you like, up to 40 per call.</p>
+<pre><code>{
+  "fields": [
+    &quot;po_number&quot;,
+    &quot;vendor&quot;,
+    &quot;ship_to&quot;,
+    &quot;delivery_date&quot;,
+    &quot;total_units&quot;,
+    &quot;incoterms&quot;
+  ]
+}</code></pre>
+  <p class="note">And what comes back:</p>
+<pre><code>{
+  &quot;po_number&quot;: &quot;PO-55120&quot;,
+  &quot;vendor&quot;: &quot;Northwind Trading Co.&quot;,
+  &quot;ship_to&quot;: &quot;Warehouse 4, Rotterdam&quot;,
+  &quot;delivery_date&quot;: &quot;2026-09-02&quot;,
+  &quot;total_units&quot;: 1840,
+  &quot;incoterms&quot;: &quot;DAP&quot;
+}</code></pre>
+
+  <h2>Why the details matter here</h2>
+  <h3>Onboarding a client is a config change, not a project</h3>
+  <p class="muted">No parser to draw, no model to train, no per-client setup fee you have to justify. The margin on the second client is much better than on the first.</p>
+  <h3>Your integration code stays identical</h3>
+  <p class="muted">One request shape, one response shape. You write the error handling, retry logic and queueing once and reuse it across the whole client book.</p>
+  <h3>Predictable cost per client</h3>
+  <p class="muted">One extraction per call regardless of how many fields that client wants or how many pages the document has. Easy to price a retainer against.</p>
+
+  <div class="box">
+    <h2>What it does not do</h2>
+    <ul>
+    <li>There is no white-label or reseller programme yet. You would be integrating an API, not rebranding a product.</li>
+    <li>There is no per-client dashboard, usage split, or sub-account structure — usage is tracked against one API key.</li>
+    <li>No OCR for scanned documents yet.</li>
+    <li>No SLA. It is a beta run by one developer, which matters if you are signing client contracts against it.</li>
+    </ul>
+    <p class="note" style="margin:0">Listed plainly so you find out now rather than after integrating.</p>
+  </div>
+
+  <h2>Questions</h2>
+  <details><summary>Can I put my own margin on top?</summary><p>Nothing stops you billing your client for the workflow you build. But there is no formal reseller agreement or white-label tier today, so do not promise a client something the terms do not cover.</p></details>
+  <details><summary>How do I separate usage per client?</summary><p>Today you cannot — one key, one counter. If you need per-client attribution you would have to track it on your side. Multiple keys are a reasonable request; email me if you need it.</p></details>
+  <details><summary>What if it gets a field wrong for a client?</summary><p>Validate before you write. Fieldcast returns null rather than inventing values, but it does not guarantee the values it does return. For client work, put a review step on anything financial.</p></details>
+
+  <h2>Test it on your own documents</h2>
+  <p class="muted">Free tier is 50 extractions a month, no card, no sales call. That is deliberately enough to check accuracy on real files before you commit to anything.</p>
+  <a class="cta" href="/#how">Read the quickstart</a>
+  <p class="note" style="margin-top:22px"><a href="/alternatives/nanonets">Compared with Nanonets</a> · <a href="/alternatives/docparser">Compared with Docparser</a></p>
+
+</main>
+
+<footer><div class="wrap">
+  <p>Fieldcast — document extraction API. <a href="/">Home</a> · <a href="/for/">Use cases</a> · <a href="/alternatives/">Comparisons</a> · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></p>
+</div></footer>
+
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Can I put my own margin on top?", "acceptedAnswer": {"@type": "Answer", "text": "Nothing stops you billing your client for the workflow you build. But there is no formal reseller agreement or white-label tier today, so do not promise a client something the terms do not cover."}}, {"@type": "Question", "name": "How do I separate usage per client?", "acceptedAnswer": {"@type": "Answer", "text": "Today you cannot — one key, one counter. If you need per-client attribution you would have to track it on your side. Multiple keys are a reasonable request; email me if you need it."}}, {"@type": "Question", "name": "What if it gets a field wrong for a client?", "acceptedAnswer": {"@type": "Answer", "text": "Validate before you write. Fieldcast returns null rather than inventing values, but it does not guarantee the values it does return. For client work, put a review step on anything financial."}}]}</script>
+</body>
+</html>

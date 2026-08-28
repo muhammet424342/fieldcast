@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fieldcast for ai agent builders</title>
+<meta name="description" content="Fieldcast for AI agent builders: a single-call document extraction tool with a stable JSON contract, nulls instead of hallucinated values, and no multi-step workflow to orchestrate.">
+<link rel="canonical" href="https://fieldcast-peach.vercel.app/for/agent-builders">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<meta property="og:title" content="Fieldcast for ai agent builders">
+<meta property="og:description" content="Fieldcast for AI agent builders: a single-call document extraction tool with a stable JSON contract, nulls instead of hallucinated values, and no multi-step workflow to orchestrate.">
+<meta property="og:image" content="https://fieldcast-peach.vercel.app/logo-1024.png">
+<meta property="og:type" content="article">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header><div class="wrap"><nav>
+  <a class="brand" href="/"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 2h8l4 4v16H6z" stroke="#4ade80" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 2v4h4" stroke="#4ade80" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 12h6M9 16h4" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/></svg> Fieldcast</a>
+  <a href="/#how">How it works</a>
+  <a href="/#pricing">Pricing</a>
+  <a href="/for/">Use cases</a>
+  <a href="/alternatives/">Comparisons</a>
+</nav></div></header>
+
+<main class="wrap">
+
+  <p class="note" style="margin:40px 0 0">AI agent builders</p>
+  <h1>A document-extraction tool your agent can call in one step</h1>
+  <p class="lede">An agent that has to read a document usually ends up with the whole document dumped into its context, then guesses the fields itself. That burns tokens, and worse, a model asked to fill a schema will fill it — including the parts that were never in the document.</p>
+  <p>Fieldcast gives your agent one tool with a stable contract: pass the document and the field names, get typed JSON back. Fields that are genuinely absent come back <code>null</code> rather than being invented, so your agent can branch on missing data instead of acting on a plausible fiction.</p>
+
+  <h2>What the call looks like</h2>
+  <p class="note">The fields below are an example for this use case. Yours can be any names you like, up to 40 per call.</p>
+<pre><code>{
+  "fields": [
+    &quot;document_type&quot;,
+    &quot;counterparty&quot;,
+    &quot;effective_date&quot;,
+    &quot;termination_date&quot;,
+    &quot;notice_period_days&quot;,
+    &quot;governing_law&quot;
+  ]
+}</code></pre>
+  <p class="note">And what comes back:</p>
+<pre><code>{
+  &quot;document_type&quot;: &quot;service agreement&quot;,
+  &quot;counterparty&quot;: &quot;Northwind Trading Co.&quot;,
+  &quot;effective_date&quot;: &quot;2026-09-01&quot;,
+  &quot;termination_date&quot;: null,
+  &quot;notice_period_days&quot;: 30,
+  &quot;governing_law&quot;: &quot;England and Wales&quot;
+}</code></pre>
+
+  <h2>Why the details matter here</h2>
+  <h3>Null is a branch your agent can take</h3>
+  <p class="muted"><code>termination_date</code> was not in that contract, so it came back <code>null</code>. Your agent can ask a human, or flag it. An agent that received a plausible invented date would proceed confidently and be wrong.</p>
+  <h3>One call, not a workflow</h3>
+  <p class="muted">No pipeline to orchestrate, no intermediate state to hold. It fits a single tool definition, which is what an agent loop can actually reason about.</p>
+  <h3>The document does not enter your agent&#x27;s context</h3>
+  <p class="muted">Extraction happens server-side. Your agent receives a small typed object instead of twenty pages of raw text competing for context.</p>
+
+  <div class="box warn">
+    <h2>One thing that is not live yet</h2>
+    <p class="muted" style="margin:0">An x402 endpoint — pay-per-call in USDC on Base with no account and no API key — is written in the codebase but is <strong>not deployed yet</strong>, so it cannot be used today. It is listed here as roadmap, not as a feature. Use the API-key endpoint for now.</p>
+  </div>
+
+  <div class="box">
+    <h2>What it does not do</h2>
+    <ul>
+    <li>No OCR — scanned or photographed documents are not supported yet.</li>
+    <li>No MCP server yet. Today it is a plain HTTP tool; an MCP wrapper is not written.</li>
+    <li>Extraction runs on a third-party model provider, so documents leave the service. Check your confidentiality obligations first.</li>
+    <li>It is a beta run by one developer, with no uptime guarantee.</li>
+    </ul>
+    <p class="note" style="margin:0">Listed plainly so you find out now rather than after integrating.</p>
+  </div>
+
+  <h2>Questions</h2>
+  <details><summary>Is there an MCP server?</summary><p>Not yet. Fieldcast is a plain HTTP endpoint today, which most agent frameworks wrap as a tool without difficulty. An MCP server is on the list but is not written, so do not plan around it.</p></details>
+  <details><summary>Can an agent pay per call without an account?</summary><p>Not today. The x402 endpoint exists in the codebase but has not been deployed and has no wallet configured, so agents currently need an API key like any other caller.</p></details>
+  <details><summary>What does the tool definition look like?</summary><p>Two parameters: the document (text or a file) and an array of field names. The response is a flat JSON object whose keys are exactly the field names you asked for, with null for anything absent. That stability is the point — the shape does not change between calls.</p></details>
+
+  <h2>Test it on your own documents</h2>
+  <p class="muted">Free tier is 50 extractions a month, no card, no sales call. That is deliberately enough to check accuracy on real files before you commit to anything.</p>
+  <a class="cta" href="/#how">Read the quickstart</a>
+  <p class="note" style="margin-top:22px"><a href="/alternatives/nanonets">Compared with Nanonets</a> · <a href="/alternatives/mindee">Compared with Mindee</a></p>
+
+</main>
+
+<footer><div class="wrap">
+  <p>Fieldcast — document extraction API. <a href="/">Home</a> · <a href="/for/">Use cases</a> · <a href="/alternatives/">Comparisons</a> · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></p>
+</div></footer>
+
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is there an MCP server?", "acceptedAnswer": {"@type": "Answer", "text": "Not yet. Fieldcast is a plain HTTP endpoint today, which most agent frameworks wrap as a tool without difficulty. An MCP server is on the list but is not written, so do not plan around it."}}, {"@type": "Question", "name": "Can an agent pay per call without an account?", "acceptedAnswer": {"@type": "Answer", "text": "Not today. The x402 endpoint exists in the codebase but has not been deployed and has no wallet configured, so agents currently need an API key like any other caller."}}, {"@type": "Question", "name": "What does the tool definition look like?", "acceptedAnswer": {"@type": "Answer", "text": "Two parameters: the document (text or a file) and an array of field names. The response is a flat JSON object whose keys are exactly the field names you asked for, with null for anything absent. That stability is the point — the shape does not change between calls."}}]}</script>
+</body>
+</html>

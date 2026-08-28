@@ -1,0 +1,7 @@
+.vercel
+.env
+.env.*
+__pycache__/
+*.pyc
+*.db
+ekran_goruntuleri/_*.png

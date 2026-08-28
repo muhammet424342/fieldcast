@@ -1,0 +1,34 @@
+Sira,Katman,Dizin,URL,DR,Dofollow,Ucret,Varyant,Durum,Kayit_Tarihi,Listeleme_URL,Not
+1,4,x402 Bazaar,https://x402.org/bazaar,,Evet,Ucretsiz,Katman4,KOD ENGELI,,,x402 ucu DEPLOY EDILMEDI. docparse_x402.py var ama cuzdan adresi+mainnet ayari yok. Once yayina alinmali
+2,4,AI Agents List,https://aiagentslist.com/submit,,Evet,Ucretsiz,Katman4,HESAP GEREKLI,,,Login/Sign up arkasinda. Kullanici hesap acinca form doldurulabilir
+3,4,APITracker,https://apitracker.io,,Evet,Ucretsiz,Katman4,ARASTIRILACAK,,,Ana sayfada submit baglantisi bulunamadi
+4,4,AgentHunter,https://agenthunter.io/submit,,Evet,Ucretsiz,Katman4,GONDERILDI,2026-08-28,dashboard: Submitting,GONDERILDI+PUBLISH edildi. Kategori=AI Docs Agents Sektor=Finance Fiyat=Freemium Erisim=API. Logo+ekran goruntusu yuklendi. SART: siteye karsilikli rozet konuldu (index.html footer). 48 saat inceleme.
+5,4,AI Agent Store,https://aiagentstore.ai,,Evet,Ucretsiz,Katman4,YOL ARANACAK,,,/submit-agent ve /submit-ai-agent 404. Ana sayfadaki Submit an AI Agent baglantisindan gidilecek
+6,4,AI Agents Directory,https://aiagentsdirectory.com/submit-agent,,Evet,Ucretsiz,Katman4,HESAP GEREKLI,,,Sign In to Continue butonu. Gunluk guncelleniyor
+7,4,AI Agents Base,https://aiagentsbase.com,,Evet,Ucretsiz,Katman4,OLU,,,Site 404 donuyor - listeden dusuruldu
+8,4,Glama MCP,https://glama.ai/mcp/servers,,Evet,Ucretsiz,Katman4,Atlandi,,,MCP sunucusu YOK - once MCP sarmalayici yazilmali
+9,3,Theres An AI For That,https://theresanaiforthat.com,84,Evet,Ucretsiz,Katman3,Bekliyor,,,En yuksek DR'li AI dizini. Odenmis hizlandirma var
+10,3,Futurepedia,https://futurepedia.io,72,Evet,Ucretsiz,Katman3,Bekliyor,,,
+11,3,Toolify,https://toolify.ai,68,Evet,Ucretsiz,Katman3,Bekliyor,,,
+12,3,Future Tools,https://futuretools.io,65,Evet,Ucretsiz,Katman3,Bekliyor,,,Matt Wolfe - editoryal secim
+13,3,aitools.inc,https://aitools.inc,,Evet,Ucretsiz,Katman3,Bekliyor,,,
+14,3,AIStage,https://aistage.net,,Evet,Ucretsiz,Katman3,Bekliyor,,,
+15,2,AlternativeTo,https://alternativeto.net,89,Evet,Ucretsiz,Katman2,Bekliyor,,,Docparser/Mindee/Nanonets alternatifi olarak ekle
+16,2,SaaSHub,https://saashub.com,72,Evet,Ucretsiz,Katman2,Bekliyor,,,
+17,2,SourceForge,https://sourceforge.net,92,Evet,Ucretsiz,Katman2,Bekliyor,,,
+18,2,Slashdot,https://slashdot.org,91,Evet,Ucretsiz,Katman2,Bekliyor,,,
+19,2,F6S,https://f6s.com,80,Evet,Ucretsiz,Katman2,Bekliyor,,,
+20,2,G2,https://g2.com,91,Evet,Ucretsiz,Katman2,Beklemede,,,20 gercek kullanici olmadan degersiz
+21,2,Capterra,https://capterra.com,91,Evet,Ucretsiz,Katman2,Beklemede,,,Ayni - inceleme gerekiyor
+22,1,DevHunt,https://devhunt.org,35,Evet,Ucretsiz,Katman1,Bekliyor,,,Developer araci - en iyi uyum. LANSMAN HAFTASI
+23,1,Fazier,https://fazier.com,30,Evet,Ucretsiz,Katman1,Bekliyor,,,PH'ye gore cok dusuk rekabet - 1. olmak mumkun
+24,1,Uneed,https://uneed.best,40,Evet,Ucretsiz,Katman1,Bekliyor,,,Kurate edilmis
+25,1,Microlaunch,https://microlaunch.net,30,Evet,Ucretsiz,Katman1,Bekliyor,,,Bir gun degil bir ay gorunurluk
+26,1,OpenHunts,https://openhunts.com,25,Evet,Ucretsiz,Katman1,Bekliyor,,,Indie-maker dostu
+27,1,PeerPush,https://peerpush.net,25,Evet,Ucretsiz,Katman1,Bekliyor,,,
+28,1,LaunchVault,https://launchvault.dev,20,Evet,Ucretsiz,Katman1,Bekliyor,,,Bootstrap anlatisi
+29,1,What Launched Today,https://whatlaunchedtoday.com,20,Evet,Ucretsiz,Katman1,Bekliyor,,,Oy bagimsiz gorunurluk
+30,1,Launching Next,https://launchingnext.com,30,Evet,Ucretsiz,Katman1,Bekliyor,,,Editoryal
+31,1,BetaList,https://betalist.com,64,Evet,Ucretsiz,Katman1,Bekliyor,,,2-4 hafta kuyruk. Simdi gonder ki lansmanda yetissin
+32,1,Product Hunt,https://producthunt.com,91,Evet,Ucretsiz,Katman1,Beklemede,,,ANA OLAY. 3 hafta isinma + demo video gerekli. EN SON
+33,1,Hacker News Show HN,https://news.ycombinator.com,91,Nofollow,Ucretsiz,Katman1,Beklemede,,,Sadece x402 acisiyla. Baslik: Show HN: Fieldcast - document extraction an AI agent can pay for

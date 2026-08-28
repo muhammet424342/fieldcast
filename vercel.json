@@ -1,0 +1,51 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "api/pay.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/v1/(.*)",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/health",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/alternatives/?$",
+      "dest": "/public/alternatives/index.html"
+    },
+    {
+      "src": "/alternatives/([^/.]+)/?$",
+      "dest": "/public/alternatives/$1.html"
+    },
+    {
+      "src": "/for/?$",
+      "dest": "/public/for/index.html"
+    },
+    {
+      "src": "/for/([^/.]+)/?$",
+      "dest": "/public/for/$1.html"
+    },
+    {
+      "src": "/x402(/.*)?$",
+      "dest": "/api/pay.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/$1"
+    }
+  ]
+}

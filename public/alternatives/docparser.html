@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Docparser alternative — Fieldcast</title>
+<meta name="description" content="Fieldcast compared with Docparser. Docparser uses parsing rules you draw per layout; Fieldcast takes field names at request time. Free tier, no card.">
+<link rel="canonical" href="https://fieldcast-peach.vercel.app/alternatives/docparser">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<meta property="og:title" content="Docparser alternative — Fieldcast">
+<meta property="og:description" content="Fieldcast compared with Docparser. Docparser uses parsing rules you draw per layout; Fieldcast takes field names at request time. Free tier, no card.">
+<meta property="og:image" content="https://fieldcast-peach.vercel.app/logo-1024.png">
+<meta property="og:type" content="article">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header><div class="wrap"><nav>
+  <a class="brand" href="/"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 2h8l4 4v16H6z" stroke="#4ade80" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 2v4h4" stroke="#4ade80" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 12h6M9 16h4" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/></svg> Fieldcast</a>
+  <a href="/#how">How it works</a>
+  <a href="/#pricing">Pricing</a>
+  <a href="/for/">Use cases</a>
+  <a href="/alternatives/">Comparisons</a>
+</nav></div></header>
+
+<main class="wrap">
+
+  <h1>Docparser alternative: name the fields, skip the templates</h1>
+  <p class="lede">Docparser is a mature, well-integrated document parser with a no-code interface. The reason people look for an alternative is almost always the same one: the setup step. You define parsing rules against a specific layout, and when a supplier redesigns their invoice, that layout work has to be redone.</p>
+  <p>Fieldcast has no configuration step at all. You send the document and a list of field names in the same request, and the extraction adapts to whatever layout arrives. A new supplier is not a new parser.</p>
+
+  <h2>Side by side</h2>
+  <table>
+    <thead><tr><th></th><th>Fieldcast</th><th>Docparser</th></tr></thead>
+    <tbody>
+      <tr><td>Approach</td><td>Field names sent with each request</td><td>Parsing rules you configure per document layout, through a no-code interface.</td></tr>
+      <tr><td>Setup before first extraction</td><td>None</td><td>You build a parser per layout before extracting anything.</td></tr>
+      <tr><td>Pricing</td><td>Free 50/mo · $19/mo for 1,000 · $49/mo for 5,000</td><td>Paid plans listed around $39/month for roughly 100 documents at the time of writing; higher tiers scale by document count. Check their pricing page for current figures.</td></tr>
+      <tr><td>Free tier</td><td>50 extractions/month, no card, no expiry</td><td>Has a free plan, reported in the 30-150 pages/month range by third-party listings.</td></tr>
+      <tr><td>Billing unit</td><td>One extraction per API call, regardless of page count</td><td>Per parsed document; multi-page files typically count as one for invoice parsing.</td></tr>
+      <tr><td>OCR for scanned images</td><td>Not supported yet</td><td>Yes — handles scanned documents.</td></tr>
+      <tr><td>Missing field behaviour</td><td>Returns null — never a fabricated value</td><td>Depends on the parsing rule you configured; a rule that does not match returns nothing for that field.</td></tr>
+    </tbody>
+  </table>
+  <p class="note">Docparser figures were read from docparser.com and public sources in August 2026 and may have changed since. Check their pricing page before deciding — and if anything here is out of date, email me and I will correct it.</p>
+
+  <div class="box">
+    <h2>Choose Docparser instead if…</h2>
+    <ul>
+    <li>You want a no-code interface and would rather not write any code at all. Fieldcast is API-only.</li>
+    <li>You need their mature integration catalogue (Zapier, cloud storage, webhooks) out of the box.</li>
+    <li>You process scanned image documents that need OCR. Fieldcast handles PDF and text, not scanned images.</li>
+    <li>You need a vendor with years of operating history and formal support. Fieldcast is a beta run by one developer.</li>
+    </ul>
+    <p class="note" style="margin:0">These are real gaps, not false modesty. A comparison page that pretends the other product has no advantages is not worth reading.</p>
+  </div>
+
+  <h2>Choose Fieldcast if…</h2>
+  <ul>
+    <li>Your documents arrive in layouts you do not control and cannot enumerate in advance.</li>
+    <li>You want the extracted keys to match your own schema, not a vendor's field taxonomy.</li>
+    <li>A fabricated value would be worse than a missing one — Fieldcast returns <code>null</code> rather than guessing.</li>
+    <li>You want to test against your own documents before paying anything.</li>
+  </ul>
+
+  <h2>What was actually measured</h2>
+  <p class="muted">On a ten-field invoice, live in production: all ten fields correct in 1.8 seconds, dates normalised to ISO-8601, monetary values returned as numbers. On a receipt in a different currency and date format, every field correct and four fields that did not exist in the document returned as <code>null</code>. Accuracy on <em>your</em> documents should be measured on your documents — that is what the free tier is for.</p>
+
+  <h2>Questions</h2>
+  <details><summary>Do I have to migrate my existing parsers?</summary><p>There is nothing to migrate. Fieldcast has no stored parser configuration. You send the field names you want with each request, so moving over means writing one API call, not rebuilding your rules.</p></details>
+  <details><summary>Does Fieldcast handle scanned documents?</summary><p>Not yet. Fieldcast reads PDFs and plain text. Scanned image-only documents need OCR, which is on the roadmap but not available today. If your documents are scans, Docparser is the better fit right now.</p></details>
+
+  <h2>Try it against your own file</h2>
+  <p class="muted">Free tier is 50 extractions a month, no card, no sales call.</p>
+  <a class="cta" href="/#how">Read the quickstart</a>
+
+</main>
+
+<footer><div class="wrap">
+  <p>Fieldcast — document extraction API. <a href="/">Home</a> · <a href="/alternatives/">Comparisons</a> · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></p>
+  <p class="note">Docparser is a trademark of its respective owner. This page is an independent comparison and is not affiliated with or endorsed by Docparser.</p>
+</div></footer>
+
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Do I have to migrate my existing parsers?", "acceptedAnswer": {"@type": "Answer", "text": "There is nothing to migrate. Fieldcast has no stored parser configuration. You send the field names you want with each request, so moving over means writing one API call, not rebuilding your rules."}}, {"@type": "Question", "name": "Does Fieldcast handle scanned documents?", "acceptedAnswer": {"@type": "Answer", "text": "Not yet. Fieldcast reads PDFs and plain text. Scanned image-only documents need OCR, which is on the roadmap but not available today. If your documents are scans, Docparser is the better fit right now."}}]}</script>
+</body>
+</html>

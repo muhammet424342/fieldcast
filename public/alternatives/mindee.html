@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mindee alternative — Fieldcast</title>
+<meta name="description" content="Fieldcast compared with Mindee. Mindee ships pre-trained models per document type and bills per page on annual plans; Fieldcast takes any field names, month to month, with a free tier.">
+<link rel="canonical" href="https://fieldcast-peach.vercel.app/alternatives/mindee">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<meta property="og:title" content="Mindee alternative — Fieldcast">
+<meta property="og:description" content="Fieldcast compared with Mindee. Mindee ships pre-trained models per document type and bills per page on annual plans; Fieldcast takes any field names, month to month, with a free tier.">
+<meta property="og:image" content="https://fieldcast-peach.vercel.app/logo-1024.png">
+<meta property="og:type" content="article">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header><div class="wrap"><nav>
+  <a class="brand" href="/"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 2h8l4 4v16H6z" stroke="#4ade80" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 2v4h4" stroke="#4ade80" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 12h6M9 16h4" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/></svg> Fieldcast</a>
+  <a href="/#how">How it works</a>
+  <a href="/#pricing">Pricing</a>
+  <a href="/for/">Use cases</a>
+  <a href="/alternatives/">Comparisons</a>
+</nav></div></header>
+
+<main class="wrap">
+
+  <h1>Mindee alternative for teams that need arbitrary fields, not fixed models</h1>
+  <p class="lede">Mindee is a solid, well-reviewed OCR API with real engineering behind it. Its model is document-type-first: you choose the invoice model, or the receipt model, and you get that model&#x27;s field set. That works well when your documents fall into those categories and badly when they do not.</p>
+  <p>Fieldcast is field-first. There is no model to select. You name the fields you want — up to 40 of them, in whatever vocabulary your own database already uses — and those are the keys that come back. A document type nobody has built a model for is not a blocker.</p>
+
+  <h2>Side by side</h2>
+  <table>
+    <thead><tr><th></th><th>Fieldcast</th><th>Mindee</th></tr></thead>
+    <tbody>
+      <tr><td>Approach</td><td>Field names sent with each request</td><td>Pre-trained models per document type (invoice, receipt, passport, ID, bank statement), plus custom models for other types.</td></tr>
+      <tr><td>Setup before first extraction</td><td>None</td><td>You pick the model that matches your document type, or commission a custom one.</td></tr>
+      <tr><td>Pricing</td><td>Free 50/mo · $19/mo for 1,000 · $49/mo for 5,000</td><td>Starter listed at 44 €/month billed annually (529 €/year), Pro at 116 €/month billed annually, at roughly 0.044 € per credit. A credit is one physical page. 14-day free trial, no permanent free tier. Figures read from their pricing page on 26 August 2026.</td></tr>
+      <tr><td>Free tier</td><td>50 extractions/month, no card, no expiry</td><td>14-day trial only. No standing free tier.</td></tr>
+      <tr><td>Billing unit</td><td>One extraction per API call, regardless of page count</td><td>One credit per physical page. A five-page contract costs five credits.</td></tr>
+      <tr><td>OCR for scanned images</td><td>Not supported yet</td><td>Yes — OCR is the core of the product.</td></tr>
+      <tr><td>Missing field behaviour</td><td>Returns null — never a fabricated value</td><td>Returns the model&#x27;s field set with confidence scores, so you judge low-confidence values yourself.</td></tr>
+    </tbody>
+  </table>
+  <p class="note">Mindee figures were read from mindee.com and public sources in August 2026 and may have changed since. Check their pricing page before deciding — and if anything here is out of date, email me and I will correct it.</p>
+
+  <div class="box">
+    <h2>Choose Mindee instead if…</h2>
+    <ul>
+    <li>You need OCR for scanned or photographed documents. Fieldcast does not do OCR yet.</li>
+    <li>You need bounding-box polygons or per-field confidence scores. Fieldcast returns values, not coordinates or confidence.</li>
+    <li>You need data processing localisation, custom SLAs, or a dedicated account manager.</li>
+    <li>You want a vendor with an established support organisation and public review history rather than a one-person beta.</li>
+    </ul>
+    <p class="note" style="margin:0">These are real gaps, not false modesty. A comparison page that pretends the other product has no advantages is not worth reading.</p>
+  </div>
+
+  <h2>Choose Fieldcast if…</h2>
+  <ul>
+    <li>Your documents arrive in layouts you do not control and cannot enumerate in advance.</li>
+    <li>You want the extracted keys to match your own schema, not a vendor's field taxonomy.</li>
+    <li>A fabricated value would be worse than a missing one — Fieldcast returns <code>null</code> rather than guessing.</li>
+    <li>You want to test against your own documents before paying anything.</li>
+  </ul>
+
+  <h2>What was actually measured</h2>
+  <p class="muted">On a ten-field invoice, live in production: all ten fields correct in 1.8 seconds, dates normalised to ISO-8601, monetary values returned as numbers. On a receipt in a different currency and date format, every field correct and four fields that did not exist in the document returned as <code>null</code>. Accuracy on <em>your</em> documents should be measured on your documents — that is what the free tier is for.</p>
+
+  <h2>Questions</h2>
+  <details><summary>How does per-page billing compare?</summary><p>Mindee counts one credit per physical page, so a five-page contract costs five credits. Fieldcast counts one extraction per API call regardless of page count. Which is cheaper depends entirely on your document lengths — run both against your own files before deciding.</p></details>
+  <details><summary>Is there a free tier?</summary><p>Mindee offers a 14-day trial. Fieldcast has a standing free tier of 50 extractions per month with no card, which exists so you can measure accuracy on your own documents rather than trusting anyone&#x27;s benchmark.</p></details>
+
+  <h2>Try it against your own file</h2>
+  <p class="muted">Free tier is 50 extractions a month, no card, no sales call.</p>
+  <a class="cta" href="/#how">Read the quickstart</a>
+
+</main>
+
+<footer><div class="wrap">
+  <p>Fieldcast — document extraction API. <a href="/">Home</a> · <a href="/alternatives/">Comparisons</a> · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></p>
+  <p class="note">Mindee is a trademark of its respective owner. This page is an independent comparison and is not affiliated with or endorsed by Mindee.</p>
+</div></footer>
+
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How does per-page billing compare?", "acceptedAnswer": {"@type": "Answer", "text": "Mindee counts one credit per physical page, so a five-page contract costs five credits. Fieldcast counts one extraction per API call regardless of page count. Which is cheaper depends entirely on your document lengths — run both against your own files before deciding."}}, {"@type": "Question", "name": "Is there a free tier?", "acceptedAnswer": {"@type": "Answer", "text": "Mindee offers a 14-day trial. Fieldcast has a standing free tier of 50 extractions per month with no card, which exists so you can measure accuracy on your own documents rather than trusting anyone's benchmark."}}]}</script>
+</body>
+</html>

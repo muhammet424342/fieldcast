@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Terms of Service — Fieldcast</title>
+<meta name="description" content="Terms governing use of the Fieldcast document extraction API.">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body><div class="wrap">
+<h1>Terms of Service</h1>
+<p class="upd">Last updated: 26 August 2026</p>
+
+<h2>1. The service</h2>
+<p>Fieldcast is an API that extracts named fields from documents and returns them as JSON. It is operated by Muhammet Karakurt as an independent developer.</p>
+
+<h2>2. Beta status</h2>
+<p>Fieldcast is in beta. The service is provided as-is, availability is not guaranteed, and endpoints may change. Do not use it as the sole system of record for data you cannot afford to lose or re-derive.</p>
+
+<h2>3. Accuracy</h2>
+<p>Extraction is performed by a language model. Output may be incomplete or incorrect. <strong>You are responsible for validating extracted values before relying on them</strong>, particularly for financial, legal, or accounting purposes. Fieldcast returns <code>null</code> for fields it does not find rather than guessing, but this is not a guarantee of correctness for the fields it does return.</p>
+
+<h2>4. Acceptable use</h2>
+<p>You may not use Fieldcast to process documents you have no right to process, to attempt to extract data from stolen or unlawfully obtained material, or to overload the service through automated abuse. API keys are personal to you; do not share or resell access without agreement.</p>
+
+<h2>5. Quotas and pricing</h2>
+<p>Each plan carries a monthly extraction quota. Requests beyond the quota return HTTP 429. Prices are listed on the pricing section of the homepage and may change with notice for future billing periods.</p>
+
+<h2>6. Agent payments</h2>
+<p>Requests to the x402 endpoint are settled per call in USDC on the Base network. Blockchain settlements are final and cannot be reversed by Fieldcast.</p>
+
+<h2>7. Liability</h2>
+<p>To the maximum extent permitted by law, Fieldcast is not liable for indirect or consequential losses, including losses arising from reliance on extracted values. Total liability is limited to the amount you paid for the service in the three months preceding the claim.</p>
+
+<h2>8. Termination</h2>
+<p>You may stop using the service at any time. We may suspend an API key that is abusing the service or violating these terms.</p>
+
+<h2>9. Contact</h2>
+<p><a href="mailto:muhammet@decaylabs.online">muhammet@decaylabs.online</a></p>
+
+<p style="margin-top:40px"><a href="/">← Back to Fieldcast</a></p>
+</div></body>
+</html>
