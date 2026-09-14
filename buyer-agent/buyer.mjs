@@ -1,25 +1,57 @@
 // Fieldcast buyer agent: decides whether a document is worth a paid extraction,
-// and if so pays the x402 gate on Base from a Dynamic server wallet.
+// and if so pays the x402 gate from a Dynamic server wallet (USDC on Base, Arbitrum One or Arbitrum Sepolia).
+// With VAULT_ADDRESS set, it first pulls exactly that payment out of an AgentBudgetVault, whose
+// on-chain caps (per call, per day, float) bound what the agent can ever hold.
 //
 //   node buyer.mjs selftest                 offline checks of the decision guards
 //   node buyer.mjs setup                    create the Dynamic server wallet once, print its address
-//   node buyer.mjs balance                  USDC balance of the agent wallet on Base
+//   node buyer.mjs balance                  USDC balance of the agent wallet on PAY_NETWORK (default base)
 //   node buyer.mjs run <file> --fields a,b  read a document, decide, maybe pay, print the result
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createPublicClient, http, erc20Abi, formatUnits } from "viem";
-import { base } from "viem/chains";
+import { createPublicClient, http, erc20Abi, formatUnits, keccak256, stringToBytes } from "viem";
+import { base, arbitrum, arbitrumSepolia } from "viem/chains";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const STATE = path.join(HERE, "state", "wallet.json"); // walletMetadata + key shares, mode 600, never printed
 const LEDGER = path.join(HERE, "state", "ledger.jsonl");
 const GATE = process.env.GATE_URL || "https://157-173-122-86.sslip.io/base/v1/extract";
-const NETWORK = "eip155:8453";
-const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+const NETWORKS = {
+  base: {
+    id: "eip155:8453", label: "Base", chain: base, rpc: "https://mainnet.base.org",
+    usdc: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", explorer: "https://basescan.org/tx/",
+  },
+  "arbitrum-one": {
+    id: "eip155:42161", label: "Arbitrum One", chain: arbitrum, rpc: "https://arb1.arbitrum.io/rpc",
+    usdc: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831", explorer: "https://arbiscan.io/tx/",
+  },
+  // Testnet: free ETH and Circle test USDC from faucets, same contracts and same x402 flow.
+  "arbitrum-sepolia": {
+    id: "eip155:421614", label: "Arbitrum Sepolia", chain: arbitrumSepolia, rpc: "https://sepolia-rollup.arbitrum.io/rpc",
+    usdc: "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d", explorer: "https://sepolia.arbiscan.io/tx/",
+  },
+};
+const NET = NETWORKS[process.env.PAY_NETWORK || "base"];
+if (!NET) throw new Error(`unknown PAY_NETWORK ${process.env.PAY_NETWORK}; use ${Object.keys(NETWORKS).join(" | ")}`);
+const NETWORK = NET.id;
+const VAULT = process.env.VAULT_ADDRESS || null;
+const VAULT_ABI = [
+  {
+    type: "function",
+    name: "release",
+    stateMutability: "nonpayable",
+    outputs: [],
+    inputs: [
+      { name: "payee", type: "address" },
+      { name: "amount", type: "uint256" },
+      { name: "evidenceHash", type: "bytes32" },
+    ],
+  },
+];
 const MAX_PRICE_ATOMIC = BigInt(process.env.MAX_PRICE_ATOMIC || 20000); // 0.02 USDC per call
 const DAILY_BUDGET_ATOMIC = BigInt(process.env.DAILY_BUDGET_ATOMIC || 100000); // 0.10 USDC per day
-const RPC = process.env.BASE_RPC || "https://mainnet.base.org";
+const RPC = process.env.RPC_URL || process.env.BASE_RPC || NET.rpc;
 
 // ---------- free first pass: what can we get without paying ----------
 const PATTERNS = {
@@ -137,13 +169,19 @@ export function verifiedFields(report, missing, text) {
   const haystack = squash(text);
   const found = [];
   const rejected = [];
+  const quotes = {};
   for (const f of missing) {
     const entry = report[f];
     if (!entry || !(entry.present === true || entry.present === "true")) continue;
     const quote = squash(entry.quote || "");
-    (quote.length >= 2 && haystack.includes(quote) ? found : rejected).push(f);
+    if (quote.length >= 2 && haystack.includes(quote)) {
+      found.push(f);
+      quotes[f] = quote;
+    } else {
+      rejected.push(f);
+    }
   }
-  return { found, rejected };
+  return { found, rejected, quotes };
 }
 
 async function askModel(ctx) {
@@ -160,7 +198,7 @@ async function askModel(ctx) {
       return { pay: false, reason: `${why} ${tag}` };
     }
     const unverified = check.rejected.length ? `; unverified: ${check.rejected.join(", ")}` : "";
-    return { pay: true, reason: `verified in text: ${check.found.join(", ")}${unverified} ${tag}` };
+    return { pay: true, reason: `verified in text: ${check.found.join(", ")}${unverified} ${tag}`, quotes: check.quotes };
   }
   // Fail closed: an agent that cannot check the document does not pay for it.
   return { pay: false, reason: "no model answered; not paying blind" };
@@ -184,6 +222,12 @@ async function askEngine(engine, key, prompt) {
   } catch {
     return null; // timeout, retired model, or non-JSON answer
   }
+}
+
+// What the vault logs on-chain: the document and the exact quotes that justified paying, hashed.
+export function evidenceHash(text, quotes) {
+  const sorted = Object.fromEntries(Object.keys(quotes || {}).sort().map((k) => [k, quotes[k]]));
+  return keccak256(stringToBytes(JSON.stringify({ document: keccak256(stringToBytes(text)), quotes: sorted })));
 }
 
 // ---------- Dynamic server wallet ----------
@@ -220,13 +264,13 @@ async function setup() {
     JSON.stringify({ address: walletMetadata.accountAddress, backup, walletMetadata, externalServerKeyShares }),
     { mode: 0o600 },
   );
-  console.log("agent wallet (Base):", walletMetadata.accountAddress);
+  console.log("agent wallet (any EVM chain):", walletMetadata.accountAddress);
 }
 
 async function balance(address = loadWallet().address) {
-  const pc = createPublicClient({ chain: base, transport: http(RPC) });
-  const raw = await pc.readContract({ address: USDC_BASE, abi: erc20Abi, functionName: "balanceOf", args: [address] });
-  console.log(`${address}  ${formatUnits(raw, 6)} USDC on Base`);
+  const pc = createPublicClient({ chain: NET.chain, transport: http(RPC) });
+  const raw = await pc.readContract({ address: NET.usdc, abi: erc20Abi, functionName: "balanceOf", args: [address] });
+  console.log(`${address}  ${formatUnits(raw, 6)} USDC on ${NET.label}`);
   return raw;
 }
 
@@ -239,11 +283,26 @@ async function payingFetch() {
     walletMetadata: w.walletMetadata, // SDK 1.1.x takes the full metadata; the docs example with accountAddress is stale
     externalServerKeyShares: w.externalServerKeyShares,
     ...(w.backup ? { password: process.env.WALLET_PASSWORD } : {}),
-    chain: base,
+    chain: NET.chain,
+    rpcUrl: RPC,
   });
   const x402 = new x402Client();
   x402.register(NETWORK, new ExactEvmScheme(walletClient.account));
-  return { fetchPaid: wrapFetchWithPayment(fetch, x402), x402 };
+  return { fetchPaid: wrapFetchWithPayment(fetch, x402), x402, walletClient };
+}
+
+// Move the agent's whole USDC balance into the vault: the float cap refuses a release while the agent holds more.
+async function fund() {
+  if (!VAULT) throw new Error("set VAULT_ADDRESS");
+  const amount = await balance();
+  if (amount === 0n) return console.log("nothing to move");
+  const { walletClient } = await payingFetch();
+  const hash = await walletClient.writeContract({
+    address: NET.usdc, abi: erc20Abi, functionName: "transfer", args: [VAULT, amount], account: walletClient.account, chain: NET.chain,
+  });
+  const rc = await createPublicClient({ chain: NET.chain, transport: http(RPC) }).waitForTransactionReceipt({ hash });
+  if (rc.status !== "success") throw new Error(`transfer reverted: ${NET.explorer}${hash}`);
+  console.log(`moved ${formatUnits(amount, 6)} USDC to vault ${VAULT}  tx: ${NET.explorer}${hash}`);
 }
 
 function ledger() {
@@ -262,7 +321,7 @@ async function run(file, fields) {
   const body = JSON.stringify({ text, fields });
   const probe = await fetch(GATE, { method: "POST", headers: { "Content-Type": "application/json" }, body });
   const req = probe.status === 402 ? readRequirement(probe.headers, await probe.json().catch(() => ({}))) : null;
-  if (!req) throw new Error(`gate did not return a Base payment requirement (HTTP ${probe.status})`);
+  if (!req) throw new Error(`gate did not return a ${NET.label} payment requirement (HTTP ${probe.status})`);
   entry.price_atomic = String(req.amount);
 
   const blocked = guard({ missing, priceAtomic: req.amount, spent: spentToday(ledger()) });
@@ -271,7 +330,24 @@ async function run(file, fields) {
   console.log(`decision: ${entry.decision} — ${decision.reason}`);
 
   if (decision.pay) {
-    const { fetchPaid } = await payingFetch();
+    const { fetchPaid, walletClient } = await payingFetch();
+    if (VAULT) {
+      // Pull exactly this payment out of the vault first. If any on-chain cap refuses, nothing is paid.
+      const evidence = evidenceHash(text, decision.quotes);
+      const pc = createPublicClient({ chain: NET.chain, transport: http(RPC) });
+      const releaseTx = await walletClient.writeContract({
+        address: VAULT,
+        abi: VAULT_ABI,
+        functionName: "release",
+        args: [req.payTo, req.amount, evidence],
+        account: walletClient.account,
+        chain: NET.chain,
+      });
+      const rc = await pc.waitForTransactionReceipt({ hash: releaseTx });
+      if (rc.status !== "success") throw new Error(`vault release reverted: ${NET.explorer}${releaseTx}`);
+      Object.assign(entry, { vault: VAULT, vault_release_tx: releaseTx, evidence_hash: evidence });
+      console.log(`vault released ${formatUnits(req.amount, 6)} USDC  evidence ${evidence.slice(0, 10)}...  tx: ${NET.explorer}${releaseTx}`);
+    }
     const res = await fetchPaid(GATE, { method: "POST", headers: { "Content-Type": "application/json" }, body });
     const { decodePaymentResponseHeader } = await import("@x402/fetch");
     const settle = res.headers.get("payment-response");
@@ -284,7 +360,7 @@ async function run(file, fields) {
       http: res.status,
       result: { ...found, ...(data.data || {}) },
     });
-    console.log(`paid ${formatUnits(req.amount, 6)} USDC  tx: ${entry.tx ? `https://basescan.org/tx/${entry.tx}` : "n/a"}`);
+    console.log(`paid ${formatUnits(req.amount, 6)} USDC  tx: ${entry.tx ? `${NET.explorer}${entry.tx}` : "n/a"}`);
   } else {
     entry.result = found;
   }
@@ -305,9 +381,14 @@ function selftest() {
   assert(guard({ missing: ["x"], priceAtomic: 10000n, spent: 0n }) === null, "within limits -> model decides");
   const today = new Date().toISOString();
   assert(spentToday([{ paid: true, at: today, amount_atomic: "10000" }, { paid: false, at: today }]) === 10000n, "ledger sum");
-  const hdr = Buffer.from(JSON.stringify({ accepts: [{ network: NETWORK, amount: "10000", payTo: "0xabc", asset: USDC_BASE }] })).toString("base64");
+  const hdr = Buffer.from(JSON.stringify({
+    accepts: [
+      { network: "eip155:1", amount: "1", payTo: "0xwrong", asset: "0x0" },
+      { network: NETWORK, amount: "10000", payTo: "0xabc", asset: NET.usdc },
+    ],
+  })).toString("base64");
   const r = readRequirement(new Map([["payment-required", hdr]]), null);
-  assert(r.amount === 10000n && r.payTo === "0xabc", "v2 header parse");
+  assert(r.amount === 10000n && r.payTo === "0xabc", "v2 header parse picks our network");
   assert(parseJsonObject('noise {"a": {"present": true}} tail').a.present === true, "json object after noise");
   assert(parseJsonObject("Here's a thinking process: 1. analyze") === null, "no json -> null");
   const receipt = "receipt ref nw/88-4471-b\namount payable EUR 69,40";
@@ -322,6 +403,11 @@ function selftest() {
   );
   assert(v.found.join() === "invoice_number" && v.rejected.join() === "total", "a quote must occur verbatim");
   assert(verifiedFields(null, ["x"], "t") === null, "no report -> null");
+  assert(v.quotes.invoice_number === "nw/88-4471-b" && !("total" in v.quotes), "only verified quotes are kept");
+  const e1 = evidenceHash(receipt, { total: "69,40", invoice_number: "nw/88-4471-b" });
+  const e2 = evidenceHash(receipt, { invoice_number: "nw/88-4471-b", total: "69,40" });
+  assert(e1 === e2 && /^0x[0-9a-f]{64}$/.test(e1), "evidence hash is stable under key order");
+  assert(evidenceHash(receipt + " ", { total: "69,40" }) !== e1, "evidence hash commits to the document");
   console.log("selftest ok");
 }
 
@@ -331,10 +417,11 @@ const commands = {
   selftest: async () => selftest(),
   setup,
   balance: () => balance(),
+  fund,
   run: () => run(args[0], fieldsArg),
 };
 if (!commands[cmd]) {
-  console.log("usage: node buyer.mjs selftest | setup | balance | run <file> --fields a,b,c");
+  console.log("usage: node buyer.mjs selftest | setup | balance | fund | run <file> --fields a,b,c");
   process.exit(1);
 }
 commands[cmd]().catch((e) => {

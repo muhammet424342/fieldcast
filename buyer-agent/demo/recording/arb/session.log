@@ -1,0 +1,37 @@
+Script started on 2026-09-14 12:26:05+03:00 [COMMAND="stty cols 112 rows 40; demo/recording/demo_arb.sh" <not executed on terminal>]
+TERM environment variable not set.
+[1mFieldcast Buyer Agent on Arbitrum[0m — pays only for verified data, only from an on-chain budget
+
+[1;32m$[0m vault_status
+vault 0x2c48d7f3bd378d64b0ebe7f85d3ae94fcf3d004c (Arbitrum Sepolia)
+  caps      per call 0.02 · daily 0.10 · agent float 0.03 USDC
+  spent     today 0.01 USDC
+  balances  vault 19.99 · agent 0.00 USDC
+
+[1;32m$[0m node buyer.mjs run demo/shipping_notice.txt --fields invoice_number,date,total,vendor_tax_id
+decision: skip — none of invoice_number, date, total, vendor_tax_id is written in the document [nvidia/nemotron-3-super-120b-a12b]
+{
+  "invoice_number": null,
+  "date": null,
+  "total": null,
+  "vendor_tax_id": null
+}
+
+[1;32m$[0m node buyer.mjs run demo/messy_receipt.txt --fields invoice_number,date,total,vendor_tax_id
+decision: pay — verified in text: invoice_number, date, total, vendor_tax_id [nvidia/nemotron-3-super-120b-a12b]
+vault released 0.01 USDC  evidence 0x3de2436c...  tx: https://sepolia.arbiscan.io/tx/0x940965bf323e56f938d96663d24043ca5988548feb3841234e10a6a954a0d86d
+paid 0.01 USDC  tx: https://sepolia.arbiscan.io/tx/0x2c98152a0ee5e826de3ec383171fb91ebd09d957685358be3b0bf80bfbaaf3ad
+{
+  "invoice_number": "nw/88-4471-b",
+  "date": "2026-09-14",
+  "total": 69.4,
+  "vendor_tax_id": "DE 813 456 902"
+}
+
+[1;32m$[0m vault_status
+vault 0x2c48d7f3bd378d64b0ebe7f85d3ae94fcf3d004c (Arbitrum Sepolia)
+  caps      per call 0.02 · daily 0.10 · agent float 0.03 USDC
+  spent     today 0.02 USDC
+  balances  vault 19.98 · agent 0.00 USDC
+
+Script done on 2026-09-14 12:26:47+03:00 [COMMAND_EXIT_CODE="0"]

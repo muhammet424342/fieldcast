@@ -1,10 +1,13 @@
 # Fieldcast Buyer Agent
 
 An agent that decides whether a document is worth paying to process, and pays for it itself
-from a Dynamic server wallet, over x402, in USDC on Base.
+from a Dynamic server wallet, over x402, in USDC. The same buyer runs on **Base** (RUNTIME Agent
+Week) and on **Arbitrum Sepolia** behind `AgentBudgetVault` (Arbitrum Open House Singapore,
+Promising Products).
 
-Built for RUNTIME Agent Week (Bankr, September 2026). Tracks: Bankr grand prize, Dynamic
-"Best Agentic Wallet or Payment Experience".
+Built for RUNTIME Agent Week (Bankr, September 2026) and the Arbitrum Open House Singapore
+Buildathon. Tracks: Bankr grand prize, Dynamic "Best Agentic Wallet or Payment Experience",
+Arbitrum Promising Products.
 
 ## What it does
 
@@ -44,10 +47,24 @@ this shows a working agent-to-API payment, not outside customers.
 
 ## Pieces
 
-- `buyer.mjs` — the agent. `selftest`, `setup` (create the Dynamic server wallet), `balance`, `run <file> --fields a,b`.
-- `gate-base.mjs` — the seller: an x402 v2 paywall (`@x402/express`) in front of the Fieldcast extraction API,
-  USDC on Base (`eip155:8453`), PayAI facilitator. Live at `https://157-173-122-86.sslip.io/base/v1/extract`.
+- `buyer.mjs` — the agent. `selftest`, `setup` (create the Dynamic server wallet), `balance`, `fund` (sweep USDC into the vault), `run <file> --fields a,b`.
+- `gate-base.mjs` — the seller: an x402 v2 paywall (`@x402/express`) in front of the Fieldcast extraction API.
+  Networks: Base (`eip155:8453`), Arbitrum One (`eip155:42161`), Arbitrum Sepolia (`eip155:421614`).
+  PayAI facilitator. Live at `https://157-173-122-86.sslip.io/base/v1/extract`.
+- `contracts/src/AgentBudgetVault.sol` — Ownable2Step vault: `perCallCap` 0.02 / `dailyCap` 0.10 / `floatCap` 0.03 USDC, allowlisted payee, `evidenceHash` on `Released`. Foundry tests 20/20, coverage 100% of lines/branches.
 - `fieldcast-gate-base.service` — systemd unit for the gate.
+
+## Arbitrum Sepolia (Open House Singapore)
+
+The agent cannot hold a working balance. `floatCap` forces USDC into the vault; each paid call does
+`vault.release` then the x402 payment. Caps are on-chain, the model cannot override them.
+
+- Vault: [`0x2c48d7f3bd378d64b0ebe7f85d3ae94fcf3d004c`](https://arbitrum-sepolia.blockscout.com/address/0x2c48d7f3bd378d64b0ebe7f85d3ae94fcf3d004c) (deploy tx [`0x523a66d1…187d`](https://arbitrum-sepolia.blockscout.com/tx/0x523a66d1011b24e9393d56a4ff6b08bfa50c8ccbf075c7884f554d48d017187d))
+- Demo skip (shipping notice, no fields in the text) then pay (messy receipt, 4/4 verified):
+  vault release [`0x940965bf…0d86d`](https://arbitrum-sepolia.blockscout.com/tx/0x940965bf323e56f938d96663d24043ca5988548feb3841234e10a6a954a0d86d)
+  · x402 payment [`0x2c98152a…af3ad`](https://arbitrum-sepolia.blockscout.com/tx/0x2c98152a0ee5e826de3ec383171fb91ebd09d957685358be3b0bf80bfbaaf3ad)
+- Run: `PAY_NETWORK=arbitrum-sepolia VAULT_ADDRESS=0x2c48d7f3bd378d64b0ebe7f85d3ae94fcf3d004c node buyer.mjs run demo/messy_receipt.txt --fields invoice_number,date,total,vendor_tax_id`
+- This is **testnet**. Both wallets are ours. It shows a working vault-gated agent payment, not outside customers.
 
 ## Architecture
 
