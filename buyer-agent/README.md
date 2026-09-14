@@ -49,6 +49,49 @@ this shows a working agent-to-API payment, not outside customers.
   USDC on Base (`eip155:8453`), PayAI facilitator. Live at `https://157-173-122-86.sslip.io/base/v1/extract`.
 - `fieldcast-gate-base.service` — systemd unit for the gate.
 
+## Architecture
+
+```
+document ──> buyer.mjs ──(1) regex, free──> done if every field found
+                 │
+                 ├─(2) POST gate, no payment ──> HTTP 402 {network, asset, amount, payTo}
+                 ├─(3) hard guards: price cap, daily budget
+                 ├─(4) model: {present, quote} per missing field ──> code verifies quote is in the text
+                 └─(5) Dynamic server wallet signs EIP-3009 ──> @x402/fetch retries
+                                                                  │
+nginx (TLS, rate limit) ──> gate-base.mjs (@x402/express, PayAI facilitator settles on Base)
+                                   └──> Fieldcast extraction API (firewalled, not reachable from outside) ──> JSON
+```
+
+## Security limits
+
+What this is and is not, stated plainly:
+
+- **Documents go to a model provider.** The seller sends the document text to its extraction model
+  (DeepSeek) and the buyer sends it to its decision model (NVIDIA, DeepSeek fallback). Do not send
+  documents you are not allowed to share with those providers.
+- **No raw documents in server logs.** The extraction API stores per call only: the API key used (the gate's own key or the public demo key), timestamp,
+  number of fields, number of characters, success flag. nginx keeps its default access log (IP, time, request line,
+  status, user agent), no request bodies. The buyer's local `state/ledger.jsonl` does keep the extracted values;
+  it is the buyer's own file.
+- **Limits:** 30 requests/minute per IP (burst 20) and 2 MB body at nginx; document text is cut at
+  20,000 characters before extraction; a failed extraction returns HTTP 4xx/5xx, and `@x402/express` cancels settlement for those responses, so it is not charged.
+- **Wallet:** the key share lives in a mode-600 file on one server with no backup (see below). Keep
+  only a demo balance in it.
+
+## Usage so far
+
+Counted from on-chain stablecoin transfers to the seller (USDC on Base, USDT on the earlier Celo gate), not from our own logs, and kept in three
+separate buckets that are never added together:
+
+| Bucket | Meaning | Paid calls | Wallets |
+|---|---|---|---|
+| `internal_test` | our own wallets | 3 | 2 |
+| `subsidized_external` | outside person, we funded their wallet | 0 | 0 |
+| `externally_paid` | outside person, their own money | 0 | 0 |
+
+As of 14 September 2026. There are no outside users yet.
+
 ## Decision engines
 
 Measured 14 September 2026 on the demo documents:
