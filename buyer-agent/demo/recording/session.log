@@ -1,0 +1,38 @@
+Script started on 2026-09-14 03:21:35+03:00 [COMMAND="stty cols 112 rows 40; demo/recording/demo.sh" <not executed on terminal>]
+TERM environment variable not set.
+[1mFieldcast Buyer Agent[0m — pays only for data it has verified is in the document
+
+[1;32m$[0m node buyer.mjs balance
+0x126c57A501226D0f6dfc63E093A9aa928425333d  0.14 USDC on Base
+
+[1;32m$[0m node buyer.mjs run demo/clean_invoice.txt --fields invoice_number,date,total
+decision: skip — all required fields found for free
+{
+  "invoice_number": "INV-2031",
+  "date": "2026-09-14",
+  "total": "1,240.50"
+}
+
+[1;32m$[0m node buyer.mjs run demo/shipping_notice.txt --fields invoice_number,date,total,vendor_tax_id
+decision: skip — none of invoice_number, date, total, vendor_tax_id is written in the document [nvidia/nemotron-3-super-120b-a12b]
+{
+  "invoice_number": null,
+  "date": null,
+  "total": null,
+  "vendor_tax_id": null
+}
+
+[1;32m$[0m node buyer.mjs run demo/messy_receipt.txt --fields invoice_number,date,total,vendor_tax_id
+decision: pay — verified in text: invoice_number, date, total, vendor_tax_id [nvidia/nemotron-3-super-120b-a12b]
+paid 0.01 USDC  tx: https://basescan.org/tx/0xfd84c0d2b3f38d551c0204938e64540f9f43e1cb0b5d32205d626c82aa41b5a7
+{
+  "invoice_number": "nw/88-4471-b",
+  "date": "2026-09-14",
+  "total": 69.4,
+  "vendor_tax_id": "DE 813 456 902"
+}
+
+[1;32m$[0m node buyer.mjs balance
+0x126c57A501226D0f6dfc63E093A9aa928425333d  0.13 USDC on Base
+
+Script done on 2026-09-14 03:22:10+03:00 [COMMAND_EXIT_CODE="0"]

@@ -1,0 +1,24 @@
+{
+  "name": "fieldcast-buyer-agent",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@dynamic-labs-wallet/core": "^1.1.10",
+    "@dynamic-labs-wallet/node": "^1.1.10",
+    "@dynamic-labs-wallet/node-evm": "^1.1.10",
+    "@x402/core": "^2.25.0",
+    "@x402/evm": "^2.25.0",
+    "@x402/express": "^2.25.0",
+    "@x402/fetch": "^2.25.0",
+    "express": "^5.2.1",
+    "viem": "^2.56.5"
+  }
+}

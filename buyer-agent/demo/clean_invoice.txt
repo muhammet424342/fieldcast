@@ -1,0 +1,9 @@
+ACME Office Supplies Ltd.
+INVOICE No: INV-2031
+Date: 2026-09-14
+
+Item                      Qty   Price
+A4 paper (box)             4    32.00
+Toner cartridge            2    85.25
+
+Total: $1,240.50 USD

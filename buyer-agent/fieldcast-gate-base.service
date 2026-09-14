@@ -1,0 +1,18 @@
+[Unit]
+Description=Fieldcast x402 gate on Base mainnet (USDC, PayAI facilitator)
+After=network-online.target fieldcast-api.service
+Wants=network-online.target
+
+[Service]
+WorkingDirectory=/opt/projeler/runtime-agent
+EnvironmentFile=/opt/projeler/docparse/.env
+Environment=GATE_PORT=4403
+Environment=PAY_TO=0x3f425d6ffd2855585483d65da684651e330759e0
+Environment=FACILITATOR_URL=https://facilitator.payai.network
+Environment=PRICE=$0.01
+ExecStart=/usr/bin/node gate-base.mjs
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

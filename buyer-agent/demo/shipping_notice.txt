@@ -1,0 +1,11 @@
+From: notifications@parcelhub.example
+Subject: Your parcel is on the way
+
+Hi there,
+
+Good news: your parcel left our Leipzig hub this morning and is now with the local courier.
+Tracking: PH-7Q2-KD9. Expected delivery window: tomorrow between 09:00 and 13:00.
+
+No action is needed. If nobody is home, the courier will leave a card with pickup details.
+
+The ParcelHub team
