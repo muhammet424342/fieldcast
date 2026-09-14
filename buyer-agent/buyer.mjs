@@ -94,6 +94,16 @@ export function readRequirement(headers, body) {
   return { amount: BigInt(accept.amount ?? accept.maxAmountRequired), payTo: accept.payTo, asset: accept.asset };
 }
 
+// A seller can send different terms on the second (paid) challenge than on the free probe we approved.
+// True if the re-fetched offer differs from what we approved — the buyer must refuse to sign then.
+// (Reported by Ross / 402Signal: the caps checked the first challenge, nothing re-checked the second.)
+export function termsChanged(approved, offered) {
+  if (!approved || !offered) return false;
+  return offered.amount !== approved.amount
+    || (offered.payTo || "").toLowerCase() !== (approved.payTo || "").toLowerCase()
+    || (offered.asset || "").toLowerCase() !== (approved.asset || "").toLowerCase();
+}
+
 // ---------- the judgment: is the missing data worth a cent? ----------
 // The model does not say "pay". It reports, per missing field, whether the value is written in the
 // document and quotes it; the code pays only if a quote really occurs in the text. A model that
@@ -274,7 +284,7 @@ async function balance(address = loadWallet().address) {
   return raw;
 }
 
-async function payingFetch() {
+async function payingFetch(approved = null) {
   const { x402Client, wrapFetchWithPayment } = await import("@x402/fetch");
   const { ExactEvmScheme } = await import("@x402/evm/exact/client");
   const w = loadWallet();
@@ -288,7 +298,25 @@ async function payingFetch() {
   });
   const x402 = new x402Client();
   x402.register(NETWORK, new ExactEvmScheme(walletClient.account));
-  return { fetchPaid: wrapFetchWithPayment(fetch, x402), x402, walletClient };
+  // Re-check the paid challenge against the approved probe BEFORE the client signs.
+  // If the seller changed amount/payTo/asset, throw so no signature is ever produced.
+  const base = approved
+    ? async (url, opts) => {
+        const res = await fetch(url, opts);
+        if (res.status === 402) {
+          const offered = readRequirement(res.headers, await res.clone().json().catch(() => ({})));
+          if (termsChanged(approved, offered)) {
+            throw new Error(
+              `payment terms changed after approval — refusing to sign. ` +
+              `amount ${approved.amount}->${offered.amount}, payTo ${approved.payTo}->${offered.payTo}, ` +
+              `asset ${approved.asset}->${offered.asset}`,
+            );
+          }
+        }
+        return res;
+      }
+    : fetch;
+  return { fetchPaid: wrapFetchWithPayment(base, x402), x402, walletClient };
 }
 
 // Move the agent's whole USDC balance into the vault: the float cap refuses a release while the agent holds more.
@@ -330,7 +358,7 @@ async function run(file, fields) {
   console.log(`decision: ${entry.decision} — ${decision.reason}`);
 
   if (decision.pay) {
-    const { fetchPaid, walletClient } = await payingFetch();
+    const { fetchPaid, walletClient } = await payingFetch(req);
     if (VAULT) {
       // Pull exactly this payment out of the vault first. If any on-chain cap refuses, nothing is paid.
       const evidence = evidenceHash(text, decision.quotes);
@@ -389,6 +417,12 @@ function selftest() {
   })).toString("base64");
   const r = readRequirement(new Map([["payment-required", hdr]]), null);
   assert(r.amount === 10000n && r.payTo === "0xabc", "v2 header parse picks our network");
+  // second-challenge guard (Ross / 402Signal): terms that change after approval must be caught
+  const appr = { amount: 10000n, payTo: "0xAbC", asset: "0x1" };
+  assert(termsChanged(appr, { amount: 20000n, payTo: "0xabc", asset: "0x1" }) === true, "amount change caught");
+  assert(termsChanged(appr, { amount: 10000n, payTo: "0xdef", asset: "0x1" }) === true, "payTo change caught");
+  assert(termsChanged(appr, { amount: 10000n, payTo: "0xabc", asset: "0x2" }) === true, "asset change caught");
+  assert(termsChanged(appr, { amount: 10000n, payTo: "0xabc", asset: "0x1" }) === false, "same terms pass (case-insensitive)");
   assert(parseJsonObject('noise {"a": {"present": true}} tail').a.present === true, "json object after noise");
   assert(parseJsonObject("Here's a thinking process: 1. analyze") === null, "no json -> null");
   const receipt = "receipt ref nw/88-4471-b\namount payable EUR 69,40";
