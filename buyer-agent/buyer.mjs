@@ -9,7 +9,7 @@
 //   node buyer.mjs run <file> --fields a,b  read a document, decide, maybe pay, print the result
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { createPublicClient, http, erc20Abi, formatUnits, keccak256, stringToBytes } from "viem";
 import { base, arbitrum, arbitrumSepolia } from "viem/chains";
 
@@ -102,6 +102,35 @@ export function termsChanged(approved, offered) {
   return offered.amount !== approved.amount
     || (offered.payTo || "").toLowerCase() !== (approved.payTo || "").toLowerCase()
     || (offered.asset || "").toLowerCase() !== (approved.asset || "").toLowerCase();
+}
+
+// Guard the base fetch used by the paying client: on the paid 402, the offered terms must be
+// present AND identical to the ones we approved on the free probe, or we throw before any signing.
+// Missing/unreadable terms are refused explicitly (termsChanged alone can't see a null as a change).
+// Reported by Ross / 402Signal.
+export function makeGuardedFetch(approved, rawFetch = fetch) {
+  if (!approved) return rawFetch;
+  return async (url, opts) => {
+    const res = await rawFetch(url, opts);
+    if (res.status === 402) {
+      const offered = readRequirement(res.headers, await res.clone().json().catch(() => ({})));
+      if (!offered) {
+        const e = new Error("payment terms missing or unreadable on the paid challenge — refusing to sign");
+        e.code = "terms_missing";
+        throw e;
+      }
+      if (termsChanged(approved, offered)) {
+        const e = new Error(
+          `payment terms changed after approval — refusing to sign. ` +
+          `amount ${approved.amount}->${offered.amount}, payTo ${approved.payTo}->${offered.payTo}, ` +
+          `asset ${approved.asset}->${offered.asset}`,
+        );
+        e.code = "terms_changed";
+        throw e;
+      }
+    }
+    return res;
+  };
 }
 
 // ---------- the judgment: is the missing data worth a cent? ----------
@@ -298,24 +327,8 @@ async function payingFetch(approved = null) {
   });
   const x402 = new x402Client();
   x402.register(NETWORK, new ExactEvmScheme(walletClient.account));
-  // Re-check the paid challenge against the approved probe BEFORE the client signs.
-  // If the seller changed amount/payTo/asset, throw so no signature is ever produced.
-  const base = approved
-    ? async (url, opts) => {
-        const res = await fetch(url, opts);
-        if (res.status === 402) {
-          const offered = readRequirement(res.headers, await res.clone().json().catch(() => ({})));
-          if (termsChanged(approved, offered)) {
-            throw new Error(
-              `payment terms changed after approval — refusing to sign. ` +
-              `amount ${approved.amount}->${offered.amount}, payTo ${approved.payTo}->${offered.payTo}, ` +
-              `asset ${approved.asset}->${offered.asset}`,
-            );
-          }
-        }
-        return res;
-      }
-    : fetch;
+  // Re-check the paid challenge against the approved probe BEFORE the client signs (single source: makeGuardedFetch).
+  const base = makeGuardedFetch(approved);
   return { fetchPaid: wrapFetchWithPayment(base, x402), x402, walletClient };
 }
 
@@ -445,20 +458,23 @@ function selftest() {
   console.log("selftest ok");
 }
 
-const [cmd, ...args] = process.argv.slice(2);
-const fieldsArg = args.includes("--fields") ? args[args.indexOf("--fields") + 1].split(",") : [];
-const commands = {
-  selftest: async () => selftest(),
-  setup,
-  balance: () => balance(),
-  fund,
-  run: () => run(args[0], fieldsArg),
-};
-if (!commands[cmd]) {
-  console.log("usage: node buyer.mjs selftest | setup | balance | fund | run <file> --fields a,b,c");
-  process.exit(1);
+// CLI only when run directly (so this file can also be imported as a module, e.g. by tests).
+if (import.meta.url === pathToFileURL(process.argv[1] || "").href) {
+  const [cmd, ...args] = process.argv.slice(2);
+  const fieldsArg = args.includes("--fields") ? args[args.indexOf("--fields") + 1].split(",") : [];
+  const commands = {
+    selftest: async () => selftest(),
+    setup,
+    balance: () => balance(),
+    fund,
+    run: () => run(args[0], fieldsArg),
+  };
+  if (!commands[cmd]) {
+    console.log("usage: node buyer.mjs selftest | setup | balance | fund | run <file> --fields a,b,c");
+    process.exit(1);
+  }
+  commands[cmd]().catch((e) => {
+    console.error("error:", e.message);
+    process.exit(1);
+  });
 }
-commands[cmd]().catch((e) => {
-  console.error("error:", e.message);
-  process.exit(1);
-});
