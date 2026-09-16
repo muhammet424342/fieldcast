@@ -1,0 +1,121 @@
+{
+  "report_version": "2",
+  "subject_version": "Record your reviewed application and dependency revisions separately.",
+  "customer_signing_integration_tested": false,
+  "report_kind": "boundary-fixtures",
+  "suites": [
+    {
+      "suite": "buyer-adapter",
+      "passed": 5,
+      "failed": 0,
+      "total": 5,
+      "subject": "customer-adapter-sha256:df2d36bcf6044ff1c950d1cad4d02ce08326822db2c1e11010f312efb6a38970"
+    },
+    {
+      "suite": "historical-verifier",
+      "passed": 2,
+      "failed": 0,
+      "total": 2,
+      "subject": "402signal-historical-verifier"
+    }
+  ],
+  "not_tested": [
+    "merchant-settlement",
+    "response-recovery",
+    "native-mpp",
+    "session-continuation",
+    "falcon-anchors",
+    "production-signing-integration"
+  ],
+  "mode": "synthetic-fixtures",
+  "profile": "exact-x402-base-fixture",
+  "fixture_sha256": "118f118798755221f115bb629b642e247fedda6bed20d25399ddb6405c002a6d",
+  "subject": "customer-adapter-sha256:df2d36bcf6044ff1c950d1cad4d02ce08326822db2c1e11010f312efb6a38970",
+  "passed": 7,
+  "failed": 0,
+  "cases": [
+    {
+      "subject": "customer-adapter-sha256:df2d36bcf6044ff1c950d1cad4d02ce08326822db2c1e11010f312efb6a38970",
+      "scenario": "matching-offer",
+      "suite": "buyer-adapter",
+      "observed_decision": "authorization_callback_reached",
+      "reason_code": null,
+      "expected_reason_code": null,
+      "next_action": "none",
+      "measured_callback_terms_match": true,
+      "expected_decision": "invoke_fake_authorization_once",
+      "observed_authorization_calls": 1,
+      "observed_rejection": false,
+      "test_outcome": "passed"
+    },
+    {
+      "subject": "customer-adapter-sha256:df2d36bcf6044ff1c950d1cad4d02ce08326822db2c1e11010f312efb6a38970",
+      "scenario": "price-changed",
+      "suite": "buyer-adapter",
+      "observed_decision": "refused",
+      "reason_code": "quote_changed",
+      "expected_reason_code": "quote_changed",
+      "next_action": "none",
+      "measured_callback_terms_match": true,
+      "expected_decision": "refuse_before_authorization",
+      "observed_authorization_calls": 0,
+      "observed_rejection": true,
+      "test_outcome": "passed"
+    },
+    {
+      "subject": "customer-adapter-sha256:df2d36bcf6044ff1c950d1cad4d02ce08326822db2c1e11010f312efb6a38970",
+      "scenario": "recipient-changed",
+      "suite": "buyer-adapter",
+      "observed_decision": "refused",
+      "reason_code": "quote_changed",
+      "expected_reason_code": "quote_changed",
+      "next_action": "none",
+      "measured_callback_terms_match": true,
+      "expected_decision": "refuse_before_authorization",
+      "observed_authorization_calls": 0,
+      "observed_rejection": true,
+      "test_outcome": "passed"
+    },
+    {
+      "subject": "customer-adapter-sha256:df2d36bcf6044ff1c950d1cad4d02ce08326822db2c1e11010f312efb6a38970",
+      "scenario": "evidence-expired",
+      "suite": "buyer-adapter",
+      "observed_decision": "refused",
+      "reason_code": "quote_expired",
+      "expected_reason_code": "quote_expired",
+      "next_action": "none",
+      "measured_callback_terms_match": true,
+      "expected_decision": "refuse_before_authorization",
+      "observed_authorization_calls": 0,
+      "observed_rejection": true,
+      "test_outcome": "passed"
+    },
+    {
+      "subject": "customer-adapter-sha256:df2d36bcf6044ff1c950d1cad4d02ce08326822db2c1e11010f312efb6a38970",
+      "scenario": "original-request-changed",
+      "suite": "buyer-adapter",
+      "observed_decision": "refused",
+      "reason_code": "request_mismatch",
+      "expected_reason_code": "request_mismatch",
+      "next_action": "none",
+      "measured_callback_terms_match": true,
+      "expected_decision": "refuse_before_authorization",
+      "observed_authorization_calls": 0,
+      "observed_rejection": true,
+      "test_outcome": "passed"
+    },
+    {
+      "suite": "historical-verifier",
+      "subject": "402signal-historical-verifier",
+      "scenario": "original-saved-record",
+      "test_outcome": "passed"
+    },
+    {
+      "suite": "historical-verifier",
+      "subject": "402signal-historical-verifier",
+      "scenario": "saved-policy-altered",
+      "test_outcome": "passed"
+    }
+  ],
+  "scope": "Tests the supplied fake authorization callback and historical verifier. No wallet is supplied. Customer adapter code is trusted, not sandboxed. This does not test all payment mechanisms, a merchant, an anchor or production settlement."
+}

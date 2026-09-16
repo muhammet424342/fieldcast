@@ -1,64 +1,43 @@
-// Fieldcast buyer <-> 402Signal route-guard adapter (0.7.6 shape), fully offline/synthetic.
-// Contract mirrors integration/buyer-checks: export authorize(options, fakeCallback).
-// The fake callback (the signer stand-in) is called at most once, only AFTER verification.
-// On refusal we throw a RouteGuardError-style error with a stable code, never calling back.
-//
-// POST binding per Ross's 0.7.6 note:
-//   - bodyFor    : the EXACT request bytes sent to Fieldcast, unchanged (no parse/reserialize)
-//   - challengeFor: the raw 402 status, body text and payment headers already received for that POST
-//   - requestFor : the 402Signal check request { resource_url, require_route_binding:true, limits }
-import { termsChanged } from "../buyer.mjs";
+// Fieldcast buyer <-> 402Signal route-guard 0.7.6.
+// authorize() delegates to the published withVerifiedRoute; its RouteGuardError propagates unchanged.
+// vendor/route-guard-0.7.6 must be the reviewed checkout of 402signalhq/402signal tag route-guard-v0.7.6
+// (commit 5ea0df9), linked to that checkout's sdk/route-guard so RouteGuardError is the same class the
+// buyer-checks runner imports:  ln -s <402signal>/sdk/route-guard vendor/route-guard-0.7.6
+import { withVerifiedRoute } from "../vendor/route-guard-0.7.6/index.mjs";
 
-export class RouteGuardError extends Error {
-  constructor(code) { super(code); this.name = "RouteGuardError"; this.code = code; }
+// Buyer-side per-call cap in atomic USDC. The daily budget stays in buyer.mjs / AgentBudgetVault.
+const PER_CALL_CAP = 20000n;
+
+export class BuyerCapError extends Error {
+  constructor(code) { super(code); this.name = "BuyerCapError"; this.code = code; }
 }
 
-// Buyer's hard caps (same as AgentBudgetVault / buyer guard), in atomic USDC.
-const LIMITS = { asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", network: "eip155:8453",
-                 per_call_atomic: "20000", daily_atomic: "100000" };
-
-// Exact bytes, unchanged. Accepts a string or Uint8Array and returns it as-is.
-export function bodyFor(options) {
-  const b = options.requestBody;
-  if (typeof b !== "string" && !(b instanceof Uint8Array)) {
-    throw new RouteGuardError("body_not_raw"); // never parse/reserialize the POST body
-  }
-  return b;
-}
-
-// The raw 402 exactly as received for THIS POST (no re-derivation).
-export function challengeFor(options) {
-  const c = options.paidChallenge || {};
-  return { status: c.status, body_text: c.bodyText, payment_headers: c.paymentHeaders || {} };
-}
-
-export function requestFor(options) {
-  return { resource_url: options.url, require_route_binding: true, limits: LIMITS };
-}
-
-// Parse the offered terms from the raw challenge's PAYMENT-REQUIRED header (base64 JSON).
-function offeredTerms(paymentHeaders, network) {
-  const h = paymentHeaders && (paymentHeaders["PAYMENT-REQUIRED"] || paymentHeaders["payment-required"]);
-  if (!h) return null;
-  let parsed;
-  try { parsed = JSON.parse(Buffer.from(h, "base64").toString("utf8")); } catch { return null; }
-  const a = (parsed?.accepts || []).find((x) => x.network === network);
-  if (!a) return null;
-  return { amount: BigInt(a.amount ?? a.maxAmountRequired), payTo: a.payTo, asset: a.asset };
-}
-
-// The trusted verification boundary. options.approved is the offer approved on the free probe.
 export async function authorize(options, fakeCallback) {
-  const approved = options.approved;                       // { amount(BigInt), payTo, asset }
-  const req = requestFor(options);                          // require_route_binding + limits (for the record)
-  const _body = bodyFor(options);                           // exact bytes preserved (throws if not raw)
-  const ch = challengeFor(options);                         // raw 402 as received
+  return withVerifiedRoute(options, (action) => {
+    if (BigInt(action.accepted.amount) > PER_CALL_CAP) throw new BuyerCapError("over_per_call_cap");
+    return fakeCallback(action);
+  });
+}
 
-  const offered = offeredTerms(ch.payment_headers, approved.network);
-  if (!offered) throw new RouteGuardError("terms_missing");            // null side -> explicit refusal
-  if (termsChanged(approved, offered)) throw new RouteGuardError("terms_changed");
-  if (offered.amount > BigInt(req.limits.per_call_atomic)) throw new RouteGuardError("over_per_call_cap");
+// POST wiring for Fieldcast (not exercised by the Base fixture runner).
+// bodyFor: the exact bytes sent to Fieldcast, never parsed and reserialized.
+export function bodyFor(rawBody) {
+  if (typeof rawBody === "string") return new TextEncoder().encode(rawBody);
+  if (rawBody instanceof Uint8Array) return rawBody;
+  throw new TypeError("body must be the raw string or bytes");
+}
 
-  // Verified: identical to the approved offer and within caps. Sign exactly once.
-  return fakeCallback({ offered, request: req });
+// challengeFor: the raw 402 already received for that same POST, header values untouched.
+export function challengeFor(res, bodyText) {
+  return {
+    status: res.status,
+    bodyText,
+    paymentRequired: res.headers.get("payment-required") ?? undefined,
+    xPaymentRequired: res.headers.get("x-payment-required") ?? undefined,
+  };
+}
+
+// requestFor: the 402Signal /route request. Constraints are top-level.
+export function requestFor(url) {
+  return { url, require_route_binding: true, networks: ["eip155:8453"], max_amount_atomic: PER_CALL_CAP.toString() };
 }
