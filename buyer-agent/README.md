@@ -85,9 +85,8 @@ nginx (TLS, rate limit) ──> gate-base.mjs (@x402/express, PayAI facilitator 
 What this is and is not, stated plainly:
 
 - **Documents go to a model provider.** The seller sends the document text to its extraction model
-  (NVIDIA-hosted models first, DeepSeek as a paid fallback) and the buyer sends it to its decision
-  model (same order: NVIDIA first, DeepSeek fallback). Do not send documents you are not allowed
-  to share with those providers.
+  (DeepSeek) and the buyer sends it to its decision model (NVIDIA, DeepSeek fallback). Do not send
+  documents you are not allowed to share with those providers.
 - **No raw documents in server logs.** The extraction API stores per call only: the API key used (the gate's own key or the public demo key), timestamp,
   number of fields, number of characters, success flag. nginx keeps its default access log (IP, time, request line,
   status, user agent), no request bodies. The buyer's local `state/ledger.jsonl` does keep the extracted values;
