@@ -4,6 +4,13 @@
 
 Live: **https://fieldcast-peach.vercel.app**
 
+## Hackathon submission
+
+- **Buyer agent code:** [`buyer-agent/`](buyer-agent/) — the agent that decides whether a
+  document is worth paying for and pays for it itself over x402. Its own README:
+  [`buyer-agent/README.md`](buyer-agent/README.md).
+- **Demo video:** https://youtu.be/WZyBKLm_svs
+
 You send a PDF or raw text plus a list of field names. Fieldcast returns those fields
 as typed JSON — numbers as numbers, dates normalised to ISO-8601. A field that is not
 in the document comes back `null` rather than a fabricated value.
@@ -61,11 +68,16 @@ ten-field invoice:
 
 | Model | Score | Time |
 |---|---|---|
-| `minimaxai/minimax-m3` | 10/10 | 1.5s |
+| `minimaxai/minimax-m3` (retired Sept 2026) | 10/10 | 1.5s |
 | `moonshotai/kimi-k3` | 10/10 | 2.7s |
 | `mistralai/mistral-nemotron` | 10/10 | 3.7s |
 | `meta/llama-3.1-70b-instruct` | 10/10 | 4.2s |
 | `meta/llama-3.1-8b-instruct` | 8/10 | 1.2s — misses date normalisation, excluded |
+
+`minimaxai/minimax-m3` is retired: NVIDIA dropped it in September 2026. Its row is kept with
+the score and time recorded while it was served. At runtime it is still tried first, fails, and
+the next model takes over. The scores and times above are from that recorded run — they are not
+re-measured here.
 
 If a model fails the next one is tried. If every provider fails the request returns 502
 with which provider failed and why — it does not silently degrade.
