@@ -5,3 +5,10 @@ __pycache__/
 *.pyc
 *.db
 ekran_goruntuleri/_*.png
+
+# Foundry: buyer-agent/contracts/lib is installed by kur.sh, never committed.
+buyer-agent/contracts/lib/
+buyer-agent/contracts/out/
+buyer-agent/contracts/cache/
+buyer-agent/contracts/coverage/
+buyer-agent/contracts/broadcast/

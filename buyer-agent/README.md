@@ -137,6 +137,32 @@ Dynamic setup: create an environment, enable *Embedded Wallets* and *Allow multi
 wallets per chain*, create an API token. The wallet needs no ETH: the payment is a signed
 authorization and the facilitator pays gas.
 
+## Run the contract tests
+
+`contracts/lib/` is not in git, so a fresh clone needs the two Foundry dependencies once:
+
+```bash
+cd contracts
+bash kur.sh && forge test
+```
+
+`kur.sh` puts `$HOME/.foundry/bin` on `PATH`, then installs OpenZeppelin Contracts 5.7.0 and
+forge-std 1.9.7 into `contracts/lib/` with `forge install --no-git`. It is idempotent — re-running
+it on a set-up tree prints "already set up" and installs nothing. OpenZeppelin 5.x is required, not
+arbitrary: the tests assert on `Pausable.EnforcedPause` and `Ownable.OwnableUnauthorizedAccount`
+(custom errors that only exist in 5.x) and the vault calls `Ownable(initialOwner)`.
+
+Last run on this tree, unmodified tests, `forge test` (forge 1.8.1, solc 0.8.28). forge's summary
+line, without the timings, which change per machine:
+
+```
+Suite result: ok. 20 passed; 0 failed; 0 skipped
+Ran 1 test suite: 20 tests passed, 0 failed, 0 skipped (20 total tests)
+```
+
+All 20 are in `test/AgentBudgetVault.t.sol`; one of them, `testFuzz_capsHoldUnderAnySequence`, is a
+fuzz test that forge runs 2000 times (`[fuzz] runs` in `foundry.toml`).
+
 ## Two things the Dynamic docs did not tell us
 
 - `createWalletAccount({ backUpToDynamic: true })` failed five times with HTTP 500 from the
