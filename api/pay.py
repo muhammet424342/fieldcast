@@ -51,6 +51,16 @@ AG_ETIKETI = (
     else f"test agi ({NETWORK}, sanal para)"
 )
 
+# Aciklamasi iki yerde kullaniliyor (odeme katmani ROUTES + kesif ucu). Tek
+# yerde tutulur ki biri guncellenince digeri geride kalmasin; kesif manifesti
+# ile 402 sartlari ayni metni gostermeye devam etsin.
+X402_ACIKLAMA = (
+    "Extract structured data from a document. Send raw text or a PDF plus the "
+    "list of field names you want, and receive those fields back as typed JSON. "
+    "Fields that do not appear in the document are returned as null rather than "
+    "invented. Useful for invoices, receipts, contracts, forms and reports."
+)
+
 app = Flask(__name__)
 
 
@@ -97,6 +107,68 @@ def health():
             "price": PRICE,
             "pay_to": PAY_TO,
             "facilitator": FACILITATOR_URL,
+        }
+    )
+
+
+@app.get("/.well-known/x402")
+def well_known_x402():
+    """Kesif ucu: ucun ne sundugunu ajanlara/kesif motorlarina duyurur.
+
+    Neden ayri bir dosya degil de uc: ajanlar once ucu dener, 404 alirsa
+    "bu hizmet odemeli degil" sanir. Canli 5 Eki 2026'da bu adres 404 donuyordu
+    (x-vercel-error: NOT_FOUND); o yuzden eklendi.
+
+ICERIK UYDURULMAZ: manifest, odeme katmaninin gercekten kullandigi
+    PAY_TO/NETWORK/PRICE/X402_ACIKLAMA degerlerinden turetilir; ayni degerler
+    odemesiz istegin dondurecegi 402 sartlarinda da kullanilir. Boylece
+    manifest ile 402 ayni kaynaktan gelir, biri degisince digeri geride kalmaz.
+
+    Odeme yapilandirilmadiysa "configured": false doner ve resources BOS
+    kalir; 200 verilir ama ucretli uc ilan edilmez. Boylece kesif motoru
+    var-olmayan bir odemeli ucu listelemez.
+    """
+    kaynak = request.url_root.rstrip("/")
+    if not PAY_TO:
+        return jsonify(
+            {
+                "x402Version": 2,
+                "service": {"name": "Fieldcast", "url": kaynak},
+                "configured": False,
+                "resources": [],
+                "health": "/x402/health",
+                "not": "X402_PAY_TO is not set on this deployment; "
+                "no paid endpoint is published here.",
+            }
+        )
+
+    return jsonify(
+        {
+            "x402Version": 2,
+            "service": {
+                "name": "Fieldcast",
+                "url": kaynak,
+                "description": "Turn PDFs and raw text into structured JSON. Pay per call in USDC.",
+            },
+            "configured": True,
+            "facilitator": FACILITATOR_URL,
+            "health": "/x402/health",
+            "resources": [
+                {
+                    "method": "POST",
+                    "path": "/x402/extract",
+                    "mimeType": "application/json",
+                    "description": X402_ACIKLAMA,
+                    "accepts": [
+                        {
+                            "scheme": "exact",
+                            "network": NETWORK,
+                            "payTo": PAY_TO,
+                            "price": PRICE,
+                        }
+                    ],
+                }
+            ],
         }
     )
 
@@ -193,12 +265,7 @@ if PAY_TO:
             accepts=PaymentOption(
                 scheme="exact", pay_to=PAY_TO, price=PRICE, network=NETWORK
             ),
-            description=(
-                "Extract structured data from a document. Send raw text or a PDF plus the "
-                "list of field names you want, and receive those fields back as typed JSON. "
-                "Fields that do not appear in the document are returned as null rather than "
-                "invented. Useful for invoices, receipts, contracts, forms and reports."
-            ),
+            description=X402_ACIKLAMA,
             service_name="Fieldcast",
             tags=["documents", "pdf", "extraction", "invoices", "json"],
             mime_type="application/json",
