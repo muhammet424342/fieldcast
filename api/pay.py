@@ -4,14 +4,19 @@
 Fark: X-API-Key yok. Odemesiz istek HTTP 402 + odeme sartlari doner; ajan
 zincir uzerinde USDC oder ve cevabi ayni akista alir.
 
-AG SECIMI (26 Agu 2026 dogrulamasi):
-  https://x402.org/facilitator/supported ucundan okunan aglar SADECE TEST aglari.
-  eip155:84532 (Base Sepolia) VAR, eip155:8453 (Base mainnet) YOK.
-  Mainnet icin CDP API anahtariyla kimlik dogrulamasi gereken facilitator lazim.
-  Bu yuzden varsayilan Base Sepolia'dir ve GERCEK PARA AKMAZ.
+AG SECIMI (5 Eki 2026 dogrulamasi):
+  Public x402.org/facilitator mainnet'i TASIYAMAZ; /supported ciktisinda aglar
+  sadece test aglari (eip155:84532 var, eip155:8453 yok). Anahtar istemeden
+  calisan bir alternatif var: https://facilitator.payai.network
+    - /supported -> HTTP 200, 35 kind; icinde "eip155:8453" + "exact" VAR
+      (ayrica "batch-settlement" ve "base" takma adi).
+  Bu yuzden varsayilan facilitator PayAI, varsayilan ag Base MAINNET.
+  Artik gercek para akabilir: USDC gercek cebe gider. Fiyat $0.01/cag.
+  Ag hala ENV ile degistirilebilir (X402_NETWORK=eip155:84532 -> sanal para).
 
-DEPLOY GUVENLIGI: X402_PAY_TO tanimli degilse surec COKMEZ; uc 503 doner ve
-sebebini soyler. Boylece adres girilmeden yapilan deploy siteyi bozmaz.
+DEPLOY GUVENLIGI: adres varsayilandir, ama X402_PAY_TO="" ile BOS birakilirsa
+surec COKMEZ; uc 503 doner ve sebebini soyler. Boylece adres geri alinmak
+istendiginde uc bedava cikarim servisine donusmez.
 """
 import os
 import sys
@@ -26,14 +31,25 @@ from flask import Flask, g, jsonify, request
 # Cikarim mantigi tek yerde durur (api/index.py); burada yeniden yazilmaz.
 from index import db, extract_fields, read_document_from_request, record_call
 
-PAY_TO = os.environ.get("X402_PAY_TO", "").strip()
-NETWORK = os.environ.get("X402_NETWORK", "eip155:84532").strip()
+# Ucunun kimligi. Uc hepsi ENV ile override edilebilir; Vercel'de .env yazilir.
+# Varsayilanlar Base MAINNET + calisan PayAI facilitator (bkz. ust yorum).
+# X402_PAY_TO="" verilirse adres bilerek boslasir -> uc 503 doner (asagiya bak).
+PAY_TO = os.environ.get(
+    "X402_PAY_TO", "0x3f425d6ffd2855585483d65da684651e330759e0"
+).strip()
+NETWORK = os.environ.get("X402_NETWORK", "eip155:8453").strip()
 PRICE = os.environ.get("X402_PRICE", "$0.01").strip()
 FACILITATOR_URL = os.environ.get(
-    "X402_FACILITATOR_URL", "https://x402.org/facilitator"
+    "X402_FACILITATOR_URL", "https://facilitator.payai.network"
 ).strip()
 
+# Tek kural: Base mainnet degilse sanal para. Boylece "hangi ag?" sorusu
+# gizli kalmaz; /x402/health bunu musteriye de soyler (asagida).
 IS_TESTNET = NETWORK != "eip155:8453"
+AG_ETIKETI = (
+    "Base (ana ag, gercek USDC)" if not IS_TESTNET
+    else f"test agi ({NETWORK}, sanal para)"
+)
 
 app = Flask(__name__)
 
@@ -57,6 +73,7 @@ def index_route():
             "price": PRICE,
             "network": NETWORK,
             "testnet": IS_TESTNET,
+            "para": "sanal" if IS_TESTNET else "GERCEK USDC",
             "configured": bool(PAY_TO),
         }
     )
@@ -64,11 +81,22 @@ def index_route():
 
 @app.get("/x402/health")
 def health():
+    """Ucretsiz. Hangi agda oldugunu ve para gercek mi sanal mi ACIKCA yazar.
+
+    Musteri "0.01 USDC" gorup gercek sanmak riski: testnet'te para yoktur.
+    Bu yuzden network TEK basina birakilmadi; network + testnet bayragi +
+    insan diliyle etiket birlikte doner.
+    """
     return jsonify(
         {
             "status": "ok" if PAY_TO else "not_configured",
             "network": NETWORK,
             "testnet": IS_TESTNET,
+            "para": "sanal" if IS_TESTNET else "GERCEK USDC",
+            "aciklama": AG_ETIKETI,
+            "price": PRICE,
+            "pay_to": PAY_TO,
+            "facilitator": FACILITATOR_URL,
         }
     )
 
