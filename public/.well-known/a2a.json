@@ -1,0 +1,41 @@
+{
+  "name": "Fieldcast",
+  "description": "Turn PDFs and raw text into structured JSON. Pay per call in USDC.",
+  "url": "https://fieldcast-peach.vercel.app",
+  "documentationUrl": "https://fieldcast-peach.vercel.app/openapi.json",
+  "capabilities": {
+    "streaming": false
+  },
+  "defaultInputModes": ["multipart/form-data", "application/json"],
+  "defaultOutputModes": ["application/json"],
+  "skills": [
+    {
+      "id": "extract",
+      "name": "Extract document fields",
+      "description": "Extract structured data from a document. Send raw text or a PDF plus the list of field names you want, and receive those fields back as typed JSON. Fields that do not appear in the document are returned as null rather than invented. Useful for invoices, receipts, contracts, forms and reports.",
+      "tags": ["documents", "pdf", "extraction", "invoices", "json"],
+      "inputModes": ["multipart/form-data", "application/json"],
+      "outputModes": ["application/json"]
+    }
+  ],
+  "x402": {
+    "endpoint": "https://fieldcast-peach.vercel.app/x402/extract",
+    "price": "$0.01",
+    "network": "eip155:8453",
+    "description": "Extract structured data from a document. Send raw text or a PDF plus the list of field names you want, and receive those fields back as typed JSON.",
+    "accepts": [
+      {
+        "scheme": "exact",
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "amount": "10000",
+        "payTo": "0x3f425d6ffd2855585483d65da684651e330759e0",
+        "maxTimeoutSeconds": 300,
+        "extra": {
+          "name": "USD Coin",
+          "version": "2"
+        }
+      }
+    ]
+  }
+}

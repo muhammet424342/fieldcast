@@ -96,6 +96,27 @@ facilitator from `CDP_API_KEY_ID` and `CDP_API_KEY_SECRET`. If either is missing
 The network is not switched to Base Sepolia. An empty `X402_PAY_TO` also returns 503
 and does not serve free extractions. CDP keys are not written into the source.
 
+### Discovery files
+
+Agents that look the service up before calling it read three static files. The
+payment object in each one is the unpaid `POST /x402/extract` challenge's
+`accepts[0]`, the same object recorded in `docs/internal/x402-mainnet.md`:
+scheme `exact`, network `eip155:8453`, amount `10000` (0.01 USDC, 6 decimals),
+asset `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`, payTo
+`0x3f425d6ffd2855585483d65da684651e330759e0`, `maxTimeoutSeconds` 300.
+No API key is in these files. The payout address is the `X402_PAY_TO` default
+already in `api/pay.py`.
+
+| File | Public path | What it says |
+|---|---|---|
+| `public/openapi.json` | `/openapi.json` | `POST /x402/extract`. Multipart `file` (PDF) and `fields` (string, comma-separated names). JSON body `{text, fields[]}` is also accepted. The 200 body is the invoice extraction object (`data` plus `chars_processed`). |
+| `public/.well-known/x402` | `/.well-known/x402` | Endpoint, price `$0.01`, network `eip155:8453`, and the extraction description. |
+| `public/.well-known/a2a.json` | `/.well-known/a2a.json` | Short agent card: name, URL, the extract skill, and the same payment object. |
+
+`vercel.json` already sends `/(.*)` to `/public/$1`, which is how these paths
+are published. A route that names `/openapi.json` and `/.well-known/*`
+explicitly is not in this change.
+
 ## Running locally
 
 ```bash
@@ -147,6 +168,9 @@ table is the code contract.
 api/index.py              extraction API
 api/pay.py                x402 endpoint (same engine, pay-per-call)
 public/                   site: landing, use cases, comparisons, legal
+public/openapi.json       OpenAPI for POST /x402/extract
+public/.well-known/x402   endpoint, price, network, description
+public/.well-known/a2a.json  short agent card
 public/style.css          single shared stylesheet
 alternatif_sayfa_uret.py  generates the /alternatives/ comparison pages
 senaryo_sayfa_uret.py     generates the /for/ use-case pages
