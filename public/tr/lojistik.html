@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fieldcast — Lojistik masası</title>
+<meta name="description" content="İrsaliyeden plaka, şoför, sevk tarihi ve irsaliye no. Belge başı $0.01, TRY karşılığı günlük kurdan.">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+<style>
+  label { display: block; font-size: 13.5px; color: var(--mut); margin: 14px 0 6px; font-weight: 600; }
+  input[type="text"], textarea {
+    width: 100%; background: var(--panel); color: var(--fg);
+    border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font: inherit;
+  }
+  textarea {
+    min-height: 180px; font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 13px; line-height: 1.55;
+  }
+  input::placeholder, textarea::placeholder { color: var(--dim); }
+  #sonuc { min-height: 96px; white-space: pre-wrap; }
+  .kir { overflow-wrap: anywhere; }
+  button.btn { font-family: inherit; background: var(--panel); }
+  button.btn-p { background: var(--acc); color: var(--acc-ink); }
+  .sr {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;
+  }
+  @media (max-width: 640px) {
+    nav .brand { flex-basis: 100%; margin-right: 0; }
+  }
+</style>
+</head>
+<body data-sayfa="lojistik" data-alan="plaka,sofor,sevk_tarihi,irsaliye_no">
+
+<header><div class="wrap"><nav>
+  <a class="brand" href="index.html">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 2h8l4 4v16H6z" stroke="#4ade80" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 2v4h4" stroke="#4ade80" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 12h6M9 16h4" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/></svg>
+    Fieldcast
+  </a>
+  <a href="index.html">Belge masası</a>
+  <a href="muhasebeci.html">Muhasebeci</a>
+  <a href="lojistik.html" aria-current="page">Lojistik</a>
+  <a href="gumruk.html">Gümrük</a>
+</nav></div></header>
+
+<main class="wrap">
+
+  <span class="tag">Lojistik</span>
+  <h1>İrsaliyeden plaka, şoför, sevk ve numara.</h1>
+  <p class="lede">Bu masanın alanları sabittir.</p>
+  <ul class="f">
+    <li>plaka</li>
+    <li>şoför</li>
+    <li>sevk tarihi</li>
+    <li>irsaliye no</li>
+  </ul>
+  <pre><code>["plaka", "sofor", "sevk_tarihi", "irsaliye_no"]</code></pre>
+  <p>Birim fiyat Kapı ile aynı kaynak: belge başı <strong>$0.01</strong>. TRY karşılığı günlük kurdan okunur (<code>api/fiyat.py</code>). <a href="index.html#fiyat">Paket kotası</a>.</p>
+
+  <h2>Canlı demo</h2>
+  <p>Bu depoda irsaliye metni yok. Aşağıdaki kutu boş bırakıldı; irsaliye dosyasını siz yüklersiniz. Depodaki sevkiyat duyurusu (<code>buyer-agent/demo/shipping_notice.txt</code>) irsaliye değil. İsterseniz onu alana koyup bu listenin belgede olmadığını görebilirsiniz.</p>
+  <label for="belge">İrsaliye metni</label>
+  <textarea id="belge" spellcheck="false" placeholder="İrsaliye metnini yapıştırın veya dosya yükleyin."></textarea>
+  <p class="cta"><button type="button" class="btn btn-s" id="ornek">Depodaki sevkiyat metnini alana koy</button></p>
+  <pre id="ornek-metin">From: notifications@parcelhub.example
+Subject: Your parcel is on the way
+
+Hi there,
+
+Good news: your parcel left our Leipzig hub this morning and is now with the local courier.
+Tracking: PH-7Q2-KD9. Expected delivery window: tomorrow between 09:00 and 13:00.
+
+No action is needed. If nobody is home, the courier will leave a card with pickup details.
+
+The ParcelHub team</pre>
+  <label for="dosya-sec">Dosya yükle</label>
+  <input id="dosya" class="sr" type="file" accept="text/plain,application/pdf,.txt,.pdf">
+  <p class="cta"><button type="button" class="btn btn-s" id="dosya-sec">Dosya seç</button></p>
+  <p class="note" id="dosya-ad">PDF multipart gider. Düz metin JSON gövdesinde gider.</p>
+  <label for="koken">Worker kökeni</label>
+  <input id="koken" type="text" autocomplete="off" spellcheck="false">
+  <p class="note">Host adı bu depoda kayıtlı değil. Yol <code>POST /x402/extract</code>.</p>
+  <p class="cta"><button type="button" class="btn btn-p" id="gonder">Worker ucuna gönder</button></p>
+
+  <h2>Sonuç</h2>
+  <pre><code id="sonuc">{
+  "hata": "henuz_cagrilmadi",
+  "ayrinti": "İrsaliyeyi Worker ucuna gönderin. Cevap burada görünür."
+}</code></pre>
+
+  <h2>Kendi ajanınız çağırsın</h2>
+  <p>Ödemesiz çağrı HTTP 402 döner. Kayıtlı şart (<code>public/openapi.json</code>): scheme exact, ağ <code>eip155:8453</code>, amount <code>10000</code> (0.01 USDC), asset <code class="kir">0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913</code>, payTo <code class="kir">0x3f425d6ffd2855585483d65da684651e330759e0</code>.</p>
+<pre><code>curl -sS -X POST "$ORIGIN/x402/extract" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"","fields":["plaka","sofor","sevk_tarihi","irsaliye_no"]}'</code></pre>
+  <p class="note">text alanına yüklediğiniz irsaliye metni gelir. Depoda örnek irsaliye olmadığı için curl'de metin boş.</p>
+
+</main>
+
+<footer><div class="wrap">
+  <p><a href="index.html">Belge masası</a> · <a href="muhasebeci.html">Muhasebeci</a> · <a href="gumruk.html">Gümrük</a></p>
+</div></footer>
+
+<script>
+(function () {
+  var metin = document.getElementById("belge");
+  var dosya = document.getElementById("dosya");
+  var koken = document.getElementById("koken");
+  var sonuc = document.getElementById("sonuc");
+  var gonder = document.getElementById("gonder");
+  var dosyaSec = document.getElementById("dosya-sec");
+  if (dosyaSec) dosyaSec.addEventListener("click", function () { dosya.click(); });
+  var ornek = document.getElementById("ornek");
+  function alanlar() {
+    return (document.body.getAttribute("data-alan") || "").split(",").filter(Boolean);
+  }
+  function yaz(obj) { sonuc.textContent = JSON.stringify(obj, null, 2); }
+  if (ornek) {
+    ornek.addEventListener("click", function () {
+      var kutu = document.getElementById("ornek-metin");
+      metin.value = (kutu.textContent || "").replace(/^\n/, "").replace(/\s+$/, "");
+      metin.dataset.pdf = "";
+    });
+  }
+  metin.addEventListener("input", function () { metin.dataset.pdf = ""; });
+  dosya.addEventListener("change", function () {
+    var f = dosya.files && dosya.files[0];
+    if (!f) return;
+    var ad = document.getElementById("dosya-ad");
+    if (ad) ad.textContent = f.name;
+    if (f.type === "application/pdf" || /\.pdf$/i.test(f.name)) {
+      metin.dataset.pdf = "1";
+      return;
+    }
+    var okuyucu = new FileReader();
+    okuyucu.onload = function () {
+      metin.value = String(okuyucu.result || "");
+      metin.dataset.pdf = "";
+    };
+    okuyucu.readAsText(f);
+  });
+  gonder.addEventListener("click", function () {
+    var uc = (koken.value || "").trim().replace(/\/+$/, "");
+    if (!uc) {
+      yaz({hata: "worker_ucu_yok", ayrinti: "Worker kökeni boş. İstek atılmadı."});
+      return;
+    }
+    if (!/^https?:\/\//i.test(uc)) {
+      yaz({hata: "worker_ucu_gecersiz", ayrinti: "Köken http veya https ile başlamalı."});
+      return;
+    }
+    var url = uc + "/x402/extract";
+    var pdf = metin.dataset.pdf === "1" && dosya.files && dosya.files[0];
+    var istek;
+    if (pdf) {
+      var fd = new FormData();
+      fd.append("file", dosya.files[0]);
+      fd.append("fields", alanlar().join(","));
+      istek = fetch(url, {method: "POST", body: fd});
+    } else {
+      istek = fetch(url, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({text: metin.value, fields: alanlar()})
+      });
+    }
+    istek.then(function (res) {
+      return res.text().then(function (govdeMetni) {
+        var govde;
+        try { govde = JSON.parse(govdeMetni); } catch (e) { govde = {ham: govdeMetni}; }
+        yaz({http: res.status, uc: url, govde: govde});
+      });
+    }).catch(function (err) {
+      yaz({hata: "cagri_basarisiz", ayrinti: String(err && err.message || err), uc: url});
+    });
+  });
+})();
+</script>
+</body>
+</html>

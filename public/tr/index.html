@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fieldcast — Türkçe belge masası</title>
+<meta name="description" content="Fatura, irsaliye ve gümrük beyannamesi için üç masa. Belge başı $0.01, TRY karşılığı günlük kurdan.">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+<style>
+  label { display: block; font-size: 13.5px; color: var(--mut); margin: 14px 0 6px; font-weight: 600; }
+  input[type="text"], textarea {
+    width: 100%; background: var(--panel); color: var(--fg);
+    border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font: inherit;
+  }
+  textarea {
+    min-height: 180px; font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 13px; line-height: 1.55;
+  }
+  textarea.uzun { min-height: 280px; }
+  input::placeholder, textarea::placeholder { color: var(--dim); }
+  #sonuc { min-height: 96px; white-space: pre-wrap; }
+  .kir { overflow-wrap: anywhere; }
+  button.btn { font-family: inherit; background: var(--panel); }
+  button.btn-p { background: var(--acc); color: var(--acc-ink); }
+  a.card { color: inherit; text-decoration: none; }
+  a.card h3 { color: var(--fg); }
+  a.card p { color: var(--mut); }
+  .sr {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;
+  }
+  @media (max-width: 640px) {
+    nav .brand { flex-basis: 100%; margin-right: 0; }
+  }
+</style>
+</head>
+<body data-sayfa="masasi" data-alan="vkn,kdv_oranlari,odeme_vadesi">
+
+<header><div class="wrap"><nav>
+  <a class="brand" href="index.html">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 2h8l4 4v16H6z" stroke="#4ade80" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 2v4h4" stroke="#4ade80" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 12h6M9 16h4" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/></svg>
+    Fieldcast
+  </a>
+  <a href="index.html" aria-current="page">Belge masası</a>
+  <a href="muhasebeci.html">Muhasebeci</a>
+  <a href="lojistik.html">Lojistik</a>
+  <a href="gumruk.html">Gümrük</a>
+</nav></div></header>
+
+<main class="wrap">
+
+  <span class="tag">Türkçe belge masası</span>
+  <h1>Belgeyi yükle, istediğin alanlar JSON gelsin.</h1>
+  <p class="lede">Üç masa var. Muhasebeci faturaya, lojistik irsaliyeye, gümrük beyannamesine bakar. Alan listeleri aynı değildir. Belgede olmayan alan null döner.</p>
+
+  <div class="grid">
+    <a class="card" href="muhasebeci.html" data-alan="vkn,kdv_oranlari,odeme_vadesi">
+      <h3>Muhasebeci</h3>
+      <p>VKN, KDV oranları, ödeme vadesi. Örnek belge depodaki faturadır.</p>
+    </a>
+    <a class="card" href="lojistik.html" data-alan="plaka,sofor,sevk_tarihi,irsaliye_no">
+      <h3>Lojistik</h3>
+      <p>plaka, şoför, sevk tarihi, irsaliye no.</p>
+    </a>
+    <a class="card" href="gumruk.html" data-alan="gtip,mense,kalem_sayisi,beyanname_no">
+      <h3>Gümrük</h3>
+      <p>GTIP, menşe, kalem sayısı, beyanname no.</p>
+    </a>
+  </div>
+
+  <h2 id="fiyat">Fiyat</h2>
+  <p>Birim fiyat tek kaynaktan okunur: <code>X402_PRICE</code>. Depodaki varsayılan belge başı <strong>$0.01</strong> (<code>api/pay.py</code>). Kapı bu birimi çağrı başı kullanır. Masa ayda 500 belge, Kurum ayda 2000 belge ve öncelikli kuyruk. Üç paketin birim fiyatı aynıdır.</p>
+  <p>TRY karşılığı <code>api/fiyat.py</code> ile, çevrimdışı son başarılı USD/TRY kurundan gelir. Kur 30 dakikadan tazeyse yeniden okunmaz. Kur okunamazsa yanıt HTTP 503 olur ve tutar alanı gelmez.</p>
+  <div class="scroll-x"><table>
+    <thead><tr><th>Paket</th><th>Kota</th><th>Birim</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Kapı</strong></td><td>belge başı</td><td>$0.01, TRY kurdan</td></tr>
+      <tr><td><strong>Masa</strong></td><td>500 belge / ay</td><td>aynı birim</td></tr>
+      <tr><td><strong>Kurum</strong></td><td>2000 belge / ay, öncelikli kuyruk</td><td>aynı birim</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Canlı demo</h2>
+  <p class="note">Metin <code>buyer-agent/demo/clean_invoice.txt</code> dosyasının aynısı. Bu sayfanın alanları muhasebeci listesidir. Diğer listeler kendi sayfasında.</p>
+  <label for="belge">Belge metni</label>
+  <textarea id="belge" class="uzun" spellcheck="false">ACME Office Supplies Ltd.
+INVOICE No: INV-2031
+Date: 2026-09-14
+
+Item                      Qty   Price
+A4 paper (box)             4    32.00
+Toner cartridge            2    85.25
+
+Total: $1,240.50 USD</textarea>
+  <label for="dosya-sec">Dosya yükle</label>
+  <input id="dosya" class="sr" type="file" accept="text/plain,application/pdf,.txt,.pdf">
+  <p class="cta"><button type="button" class="btn btn-s" id="dosya-sec">Dosya seç</button></p>
+  <p class="note" id="dosya-ad">PDF multipart gider. Düz metin JSON gövdesinde gider.</p>
+  <label for="koken">Worker kökeni</label>
+  <input id="koken" type="text" autocomplete="off" spellcheck="false">
+  <p class="note">Host adı bu depoda kayıtlı değil. Yol <code>POST /x402/extract</code>, <code>worker/x402-proxy.js</code>.</p>
+  <p class="cta"><button type="button" class="btn btn-p" id="gonder">Worker ucuna gönder</button></p>
+
+  <h2>Sonuç</h2>
+  <pre><code id="sonuc">{
+  "hata": "henuz_cagrilmadi",
+  "ayrinti": "Belgeyi Worker ucuna gönderin. Cevap burada görünür."
+}</code></pre>
+
+  <h2>Kendi ajanınız çağırsın</h2>
+  <p>Ödemesiz çağrı HTTP 402 döner. Kayıtlı şart (<code>public/openapi.json</code>): scheme exact, ağ <code>eip155:8453</code>, amount <code>10000</code> (0.01 USDC, 6 ondalık), asset <code class="kir">0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913</code>, payTo <code class="kir">0x3f425d6ffd2855585483d65da684651e330759e0</code>, maxTimeoutSeconds 300.</p>
+<pre><code>curl -sS -X POST "$ORIGIN/x402/extract" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"ACME Office Supplies Ltd.\nINVOICE No: INV-2031\nDate: 2026-09-14\nTotal: $1,240.50 USD","fields":["vkn","kdv_oranlari","odeme_vadesi"]}'</code></pre>
+  <p class="note">$ORIGIN, Worker'ın yayınlandığı köktür. Curl'deki metin aynı faturanın kısaltılmış halidir; tam metin yukarıdaki kutudadır.</p>
+
+</main>
+
+<footer><div class="wrap">
+  <p>Fieldcast belge masası. <a href="muhasebeci.html">Muhasebeci</a> · <a href="lojistik.html">Lojistik</a> · <a href="gumruk.html">Gümrük</a></p>
+</div></footer>
+
+<script>
+(function () {
+  var metin = document.getElementById("belge");
+  var dosya = document.getElementById("dosya");
+  var koken = document.getElementById("koken");
+  var sonuc = document.getElementById("sonuc");
+  var gonder = document.getElementById("gonder");
+  var dosyaSec = document.getElementById("dosya-sec");
+  if (dosyaSec) dosyaSec.addEventListener("click", function () { dosya.click(); });
+
+  function alanlar() {
+    return (document.body.getAttribute("data-alan") || "").split(",").filter(Boolean);
+  }
+  function yaz(obj) {
+    sonuc.textContent = JSON.stringify(obj, null, 2);
+  }
+  metin.addEventListener("input", function () { metin.dataset.pdf = ""; });
+  dosya.addEventListener("change", function () {
+    var f = dosya.files && dosya.files[0];
+    if (!f) return;
+    var ad = document.getElementById("dosya-ad");
+    if (ad) ad.textContent = f.name;
+    if (f.type === "application/pdf" || /\.pdf$/i.test(f.name)) {
+      metin.dataset.pdf = "1";
+      return;
+    }
+    var okuyucu = new FileReader();
+    okuyucu.onload = function () {
+      metin.value = String(okuyucu.result || "");
+      metin.dataset.pdf = "";
+    };
+    okuyucu.readAsText(f);
+  });
+  gonder.addEventListener("click", function () {
+    var uc = (koken.value || "").trim().replace(/\/+$/, "");
+    if (!uc) {
+      yaz({hata: "worker_ucu_yok", ayrinti: "Worker kökeni boş. İstek atılmadı."});
+      return;
+    }
+    if (!/^https?:\/\//i.test(uc)) {
+      yaz({hata: "worker_ucu_gecersiz", ayrinti: "Köken http veya https ile başlamalı."});
+      return;
+    }
+    var url = uc + "/x402/extract";
+    var pdf = metin.dataset.pdf === "1" && dosya.files && dosya.files[0];
+    var istek;
+    if (pdf) {
+      var fd = new FormData();
+      fd.append("file", dosya.files[0]);
+      fd.append("fields", alanlar().join(","));
+      istek = fetch(url, {method: "POST", body: fd});
+    } else {
+      istek = fetch(url, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({text: metin.value, fields: alanlar()})
+      });
+    }
+    istek.then(function (res) {
+      return res.text().then(function (govdeMetni) {
+        var govde;
+        try { govde = JSON.parse(govdeMetni); } catch (e) { govde = {ham: govdeMetni}; }
+        yaz({http: res.status, uc: url, govde: govde});
+      });
+    }).catch(function (err) {
+      yaz({hata: "cagri_basarisiz", ayrinti: String(err && err.message || err), uc: url});
+    });
+  });
+})();
+</script>
+</body>
+</html>
