@@ -89,10 +89,12 @@ receives HTTP 402 with machine-readable payment terms in the `PAYMENT-REQUIRED` 
 settles in USDC, and receives the extraction in the same flow. The route declares itself
 to the x402 Bazaar for discovery.
 
-**Status:** deployed but not configured — `X402_PAY_TO` is unset, so the endpoint returns
-503 rather than serving free extractions. Base mainnet also needs a facilitator that
-supports it; the public `x402.org` facilitator only advertises testnets
-(`eip155:84532` yes, `eip155:8453` no), so mainnet requires CDP credentials.
+**Status:** the public `x402.org` facilitator only advertises testnets
+(`eip155:84532` yes, `eip155:8453` no). Base mainnet (`eip155:8453`) builds its
+facilitator from `CDP_API_KEY_ID` and `CDP_API_KEY_SECRET`. If either is missing,
+`POST /x402/extract` returns HTTP 503 with the detail `ana ag icin CDP anahtari gerekli`.
+The network is not switched to Base Sepolia. An empty `X402_PAY_TO` also returns 503
+and does not serve free extractions. CDP keys are not written into the source.
 
 ## Running locally
 
@@ -114,10 +116,30 @@ Environment variables:
 |---|---|---|
 | `NVIDIA_API_KEY` | yes | primary extraction provider |
 | `DEEPSEEK_API_KEY` | no | fallback provider |
-| `X402_PAY_TO` | no | wallet that receives x402 payments; unset disables the endpoint |
-| `X402_NETWORK` | no | defaults to `eip155:84532` (Base Sepolia) |
+| `X402_PAY_TO` | no | wallet that receives x402 payments; empty string disables the endpoint |
+| `X402_NETWORK` | no | code default in `api/pay.py` is `eip155:8453` (Base). `eip155:84532` is Base Sepolia |
 
-No key is ever committed — everything comes from the environment.
+No key is ever committed — everything comes from the environment, including
+`CDP_API_KEY_ID` and `CDP_API_KEY_SECRET`.
+
+### Mainnet environment (`eip155:8453`)
+
+The mainnet path and the testnet path are separate. Mainnet does not fall back to
+`eip155:84532` when the CDP key is missing. Testnet uses `X402_FACILITATOR_URL`
+(code default `https://facilitator.payai.network`) and does not read the CDP key.
+Mainnet facilitator URL is `https://api.cdp.coinbase.com/platform/v2/x402`, built
+from the two CDP variables. Changing these on Vercel is a separate step; this
+table is the code contract.
+
+| Variable | Required on mainnet | Role |
+|---|---|---|
+| `X402_NETWORK` | yes, `eip155:8453` | selects the mainnet path. `eip155:84532` stays on the testnet path |
+| `CDP_API_KEY_ID` | yes | CDP API key id. The facilitator config is built from this |
+| `CDP_API_KEY_SECRET` | yes | CDP API key secret paired with the id |
+| `X402_PAY_TO` | yes | wallet that receives USDC. Empty string returns 503 |
+| `X402_PRICE` | no | call price. Code default `$0.01` |
+| `X402_FACILITATOR_URL` | no | testnet facilitator only. Ignored on the mainnet path |
+| `X402_BAZAAR` | no | `1` installs the discovery extension. `0`, `false`, or `no` turns it off |
 
 ## Layout
 

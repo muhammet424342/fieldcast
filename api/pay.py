@@ -4,15 +4,15 @@
 Fark: X-API-Key yok. Odemesiz istek HTTP 402 + odeme sartlari doner; ajan
 zincir uzerinde USDC oder ve cevabi ayni akista alir.
 
-AG SECIMI (5 Eki 2026 dogrulamasi):
+AG SECIMI:
   Public x402.org/facilitator mainnet'i TASIYAMAZ; /supported ciktisinda aglar
-  sadece test aglari (eip155:84532 var, eip155:8453 yok). Anahtar istemeden
-  calisan bir alternatif var: https://facilitator.payai.network
-    - /supported -> HTTP 200, 35 kind; icinde "eip155:8453" + "exact" VAR
-      (ayrica "batch-settlement" ve "base" takma adi).
-  Bu yuzden varsayilan facilitator PayAI, varsayilan ag Base MAINNET.
-  Artik gercek para akabilir: USDC gercek cebe gider. Fiyat $0.01/cag.
-  Ag hala ENV ile degistirilebilir (X402_NETWORK=eip155:84532 -> sanal para).
+  sadece test aglari (eip155:84532 var, eip155:8453 yok). Test agi yolu
+  https://facilitator.payai.network adresini kullanir (X402_FACILITATOR_URL).
+  Ana ag (eip155:8453) ayri yoldur: facilitator yapilandirmasi CDP_API_KEY_ID
+  ve CDP_API_KEY_SECRET ortam degiskenlerinden uretilir. Anahtar yoksa uc
+  HTTP 503 doner; ag eip155:84532 yapilmaz. Anahtarlar koda gomulmez.
+  Anahtar varken gercek USDC akabilir. Fiyat $0.01/cag.
+  Test agi: X402_NETWORK=eip155:84532 (sanal para, CDP anahtari istemez).
 
 DEPLOY GUVENLIGI: adres varsayilandir, ama X402_PAY_TO="" ile BOS birakilirsa
 surec COKMEZ; uc 503 doner ve sebebini soyler. Boylece adres geri alinmak
@@ -31,9 +31,9 @@ from flask import Flask, g, jsonify, request
 # Cikarim mantigi tek yerde durur (api/index.py); burada yeniden yazilmaz.
 from index import db, extract_fields, read_document_from_request, record_call
 
-# Ucunun kimligi. Uc hepsi ENV ile override edilebilir; Vercel'de .env yazilir.
-# Varsayilanlar Base MAINNET + calisan PayAI facilitator (bkz. ust yorum).
+# Ucunun kimligi. Hepsi ENV ile override edilebilir; Vercel'de .env yazilir.
 # X402_PAY_TO="" verilirse adres bilerek boslasir -> uc 503 doner (asagiya bak).
+# Ana ag facilitator'i PayAI degil: CDP anahtarindan uretilir (asagiya bak).
 PAY_TO = os.environ.get(
     "X402_PAY_TO", "0x3f425d6ffd2855585483d65da684651e330759e0"
 ).strip()
@@ -45,7 +45,62 @@ FACILITATOR_URL = os.environ.get(
 
 # Tek kural: Base mainnet degilse sanal para. Boylece "hangi ag?" sorusu
 # gizli kalmaz; /x402/health bunu musteriye de soyler (asagida).
-IS_TESTNET = NETWORK != "eip155:8453"
+ANA_AG = "eip155:8453"
+IS_TESTNET = NETWORK != ANA_AG
+# CDP facilitator adresi (Coinbase CDP SDK: api.cdp.coinbase.com + /platform/v2/x402).
+# Anahtarlar burada durmaz; yalnizca CDP_API_KEY_ID / CDP_API_KEY_SECRET okunur.
+CDP_FACILITATOR_URL = "https://api.cdp.coinbase.com/platform/v2/x402"
+ANA_AG_ANAHTAR_MESAJI = "ana ag icin CDP anahtari gerekli"
+
+
+def cdp_anahtari():
+    """CDP anahtar cifti. Biri bile bos ise ana ag facilitator'i kurulamaz."""
+    key_id = os.environ.get("CDP_API_KEY_ID", "").strip()
+    secret = os.environ.get("CDP_API_KEY_SECRET", "").strip()
+    if key_id and secret:
+        return key_id, secret
+    return None
+
+
+def cdp_create_headers(key_id, secret):
+    """CDP SDK create_headers sozlesmesi. Import, baslik istenene kadar ertelenir."""
+
+    def create_headers():
+        try:
+            from cdp.x402 import create_cdp_auth_headers
+        except ImportError as exc:
+            raise RuntimeError(
+                "ana ag facilitator basligi icin cdp paketi gerekli"
+            ) from exc
+        return create_cdp_auth_headers(key_id, secret)()
+
+    return create_headers
+
+
+def facilitator_ayari_kur():
+    """Testnet ile ana ag facilitator ayarini ayri uret.
+
+    Ana ag anahtarsizsa (None, mesaj) doner. NETWORK degerini degistirmez;
+    eip155:8453 anahtarsizken eip155:84532'ye dusulmez.
+    """
+    if NETWORK == ANA_AG:
+        anahtar = cdp_anahtari()
+        if anahtar is None:
+            return None, ANA_AG_ANAHTAR_MESAJI
+        key_id, secret = anahtar
+        return {
+            "url": CDP_FACILITATOR_URL,
+            "network": ANA_AG,
+            "create_headers": cdp_create_headers(key_id, secret),
+        }, None
+    return {
+        "url": FACILITATOR_URL,
+        "network": NETWORK,
+        "create_headers": None,
+    }, None
+
+
+FACILITATOR_AYARI, ANA_AG_HATASI = facilitator_ayari_kur()
 AG_ETIKETI = (
     "Base (ana ag, gercek USDC)" if not IS_TESTNET
     else f"test agi ({NETWORK}, sanal para)"
@@ -84,7 +139,7 @@ def index_route():
             "network": NETWORK,
             "testnet": IS_TESTNET,
             "para": "sanal" if IS_TESTNET else "GERCEK USDC",
-            "configured": bool(PAY_TO),
+            "configured": bool(PAY_TO) and not ANA_AG_HATASI,
         }
     )
 
@@ -99,14 +154,19 @@ def health():
     """
     return jsonify(
         {
-            "status": "ok" if PAY_TO else "not_configured",
+            "status": "ok" if PAY_TO and not ANA_AG_HATASI else "not_configured",
             "network": NETWORK,
             "testnet": IS_TESTNET,
             "para": "sanal" if IS_TESTNET else "GERCEK USDC",
             "aciklama": AG_ETIKETI,
             "price": PRICE,
             "pay_to": PAY_TO,
-            "facilitator": FACILITATOR_URL,
+            "facilitator": (
+                FACILITATOR_AYARI["url"]
+                if FACILITATOR_AYARI
+                else (CDP_FACILITATOR_URL if NETWORK == ANA_AG else FACILITATOR_URL)
+            ),
+            **({"ana_ag_hata": ANA_AG_HATASI} if ANA_AG_HATASI else {}),
         }
     )
 
@@ -129,7 +189,7 @@ ICERIK UYDURULMAZ: manifest, odeme katmaninin gercekten kullandigi
     var-olmayan bir odemeli ucu listelemez.
     """
     kaynak = request.url_root.rstrip("/")
-    if not PAY_TO:
+    if not PAY_TO or ANA_AG_HATASI:
         return jsonify(
             {
                 "x402Version": 2,
@@ -137,8 +197,12 @@ ICERIK UYDURULMAZ: manifest, odeme katmaninin gercekten kullandigi
                 "configured": False,
                 "resources": [],
                 "health": "/x402/health",
-                "not": "X402_PAY_TO is not set on this deployment; "
-                "no paid endpoint is published here.",
+                "not": (
+                    ANA_AG_ANAHTAR_MESAJI
+                    if ANA_AG_HATASI and PAY_TO
+                    else "X402_PAY_TO is not set on this deployment; "
+                    "no paid endpoint is published here."
+                ),
             }
         )
 
@@ -151,7 +215,9 @@ ICERIK UYDURULMAZ: manifest, odeme katmaninin gercekten kullandigi
                 "description": "Turn PDFs and raw text into structured JSON. Pay per call in USDC.",
             },
             "configured": True,
-            "facilitator": FACILITATOR_URL,
+            "facilitator": (
+                FACILITATOR_AYARI["url"] if FACILITATOR_AYARI else FACILITATOR_URL
+            ),
             "health": "/x402/health",
             "resources": [
                 {
@@ -234,18 +300,63 @@ def extract():
 # ki odeme katmani uzantidan bagimsiz test edilebilsin.
 BAZAAR = os.environ.get("X402_BAZAAR", "1").strip() not in ("0", "false", "no")
 
-if PAY_TO:
+def _facilitator_istemcisi(ayar):
+    from x402.http import FacilitatorConfig, HTTPFacilitatorClientSync
+
+    if ayar.get("create_headers"):
+        return HTTPFacilitatorClientSync(
+            {"url": ayar["url"], "create_headers": ayar["create_headers"]}
+        )
+    return HTTPFacilitatorClientSync(FacilitatorConfig(url=ayar["url"]))
+
+
+if not PAY_TO:
+
+    def extract_yapilandirilmamis():
+        return (
+            jsonify(
+                {
+                    "error": "x402_not_configured",
+                    "detail": "X402_PAY_TO is not set on this deployment, so payments "
+                    "cannot be collected and the endpoint is disabled.",
+                }
+            ),
+            503,
+        )
+
+    app.post("/x402/extract")(extract_yapilandirilmamis)
+    ROUTES = None
+    FACILITATOR_ISTEMCI = None
+
+elif ANA_AG_HATASI:
+
+    def extract_ana_ag_anahtarsiz():
+        return (
+            jsonify(
+                {
+                    "error": "cdp_api_key_required",
+                    "detail": ANA_AG_ANAHTAR_MESAJI,
+                }
+            ),
+            503,
+        )
+
+    app.post("/x402/extract")(extract_ana_ag_anahtarsiz)
+    ROUTES = None
+    FACILITATOR_ISTEMCI = None
+
+else:
     app.post("/x402/extract")(extract)
 
     from x402 import x402ResourceServerSync
     if BAZAAR:
         from x402.extensions.bazaar import OutputConfig, declare_discovery_extension
-    from x402.http import FacilitatorConfig, HTTPFacilitatorClientSync
     from x402.http.middleware.flask import payment_middleware
     from x402.http.types import PaymentOption, RouteConfig
     from x402.mechanisms.evm.exact import register_exact_evm_server
 
-    facilitator = HTTPFacilitatorClientSync(FacilitatorConfig(url=FACILITATOR_URL))
+    facilitator = _facilitator_istemcisi(FACILITATOR_AYARI)
+    FACILITATOR_ISTEMCI = facilitator
     server = x402ResourceServerSync(facilitator)
     register_exact_evm_server(server)
 
@@ -307,19 +418,3 @@ if PAY_TO:
     }
 
     payment_middleware(app, ROUTES, server)
-
-else:
-
-    def extract_yapilandirilmamis():
-        return (
-            jsonify(
-                {
-                    "error": "x402_not_configured",
-                    "detail": "X402_PAY_TO is not set on this deployment, so payments "
-                    "cannot be collected and the endpoint is disabled.",
-                }
-            ),
-            503,
-        )
-
-    app.post("/x402/extract")(extract_yapilandirilmamis)
