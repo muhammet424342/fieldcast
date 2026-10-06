@@ -24,7 +24,17 @@ for (const [name, value] of Object.entries({ PAY_TO, DOCPARSE_GATEWAY_KEY: UPSTR
 
 const app = express();
 app.set("trust proxy", true); // nginx terminates TLS; keep https in the advertised resource URL
-app.use(express.json({ limit: "2mb" }));
+// JSON (text + fields) and multipart PDF share one ceiling. Multipart is kept raw so the
+// boundary reaches upstream unchanged.
+const BODY_LIMIT = "5mb";
+const jsonParser = express.json({ limit: BODY_LIMIT });
+const multipartParser = express.raw({ type: () => true, limit: BODY_LIMIT });
+
+app.use((req, res, next) => {
+  const type = String(req.headers["content-type"] || "");
+  if (type.toLowerCase().includes("multipart/form-data")) return multipartParser(req, res, next);
+  return jsonParser(req, res, next);
+});
 
 app.get("/base/health", (_req, res) => res.json({ ok: true, networks: NETWORKS, price: PRICE }));
 
@@ -33,7 +43,7 @@ app.use(
     {
       "POST /base/v1/extract": {
         accepts: NETWORKS.map((network) => ({ scheme: "exact", price: PRICE, network, payTo: PAY_TO })),
-        description: "Fieldcast: send document text and a list of field names, get those fields back as typed JSON.",
+        description: "Fieldcast: send document text (JSON) or a PDF (multipart file + fields), get those fields back as typed JSON.",
         mimeType: "application/json",
       },
     },
@@ -44,20 +54,41 @@ app.use(
   ),
 );
 
-// ponytail: JSON body only (text + fields); add multipart passthrough when a buyer needs PDF upload.
 app.post("/base/v1/extract", async (req, res) => {
+  const type = String(req.headers["content-type"] || "");
+  const multipart = type.toLowerCase().includes("multipart/form-data");
   try {
+    const headers = { "X-API-Key": UPSTREAM_KEY };
+    let body;
+    if (multipart) {
+      headers["Content-Type"] = type;
+      body = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0);
+    } else {
+      headers["Content-Type"] = "application/json";
+      body = JSON.stringify({ text: req.body?.text, fields: req.body?.fields });
+    }
     const upstream = await fetch(`${UPSTREAM}/v1/extract`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-API-Key": UPSTREAM_KEY },
-      body: JSON.stringify({ text: req.body?.text, fields: req.body?.fields }),
+      headers,
+      body,
       signal: AbortSignal.timeout(90_000),
     });
+    const raw = Buffer.from(await upstream.arrayBuffer());
     // Non-2xx here means the middleware does not settle, so a failed extraction is not charged.
-    res.status(upstream.status).json(await upstream.json());
+    res.status(upstream.status);
+    res.setHeader("Content-Type", upstream.headers.get("content-type") || "application/json");
+    res.end(raw);
   } catch (err) {
     res.status(502).json({ error: "upstream_unreachable", detail: String(err).slice(0, 200) });
   }
+});
+
+app.use((err, req, res, next) => {
+  if (err && (err.status === 413 || err.statusCode === 413 || err.type === "entity.too.large")) {
+    res.status(413).json({ error: "payload_too_large" });
+    return;
+  }
+  next(err);
 });
 
 app.listen(PORT, "127.0.0.1", () =>
