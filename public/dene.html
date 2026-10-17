@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Try Fieldcast — extract JSON from a document in your browser</title>
+<meta name="description" content="Drop a PDF or paste text, type the field names you want, and see the structured JSON come back. No signup, no install.">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="/style.css">
+<style>
+  /* Sadece bu sayfaya ozel parcalar; renk/olcu degiskenleri style.css'ten gelir. */
+  .try-grid { display: grid; gap: var(--s5); grid-template-columns: 1fr; }
+  @media (min-width: 760px) { .try-grid { grid-template-columns: 1.1fr .9fr; align-items: start; } }
+
+  .drop {
+    border: 1.5px dashed var(--line-2);
+    border-radius: var(--r);
+    background: var(--panel);
+    padding: var(--s6) var(--s5);
+    text-align: center;
+    transition: border-color .2s var(--ease), background-color .2s var(--ease);
+    cursor: pointer;
+  }
+  .drop:hover, .drop.hot { border-color: var(--acc); background: var(--panel-2); }
+  .drop p { margin: var(--s2) 0 0; color: var(--mut); font-size: 14px; }
+  .drop .big { color: var(--fg); font-weight: 600; font-size: 15px; }
+
+  label.fld { display: block; font-size: 13px; color: var(--mut); margin: var(--s5) 0 var(--s1); font-weight: 500; }
+  input[type=text], input[type=password], textarea {
+    width: 100%; background: var(--panel); color: var(--fg);
+    border: 1px solid var(--line-2); border-radius: 8px;
+    padding: 11px 12px; font: inherit; font-size: 14.5px;
+  }
+  textarea { min-height: 130px; resize: vertical; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; }
+  input:focus, textarea:focus { outline: 2px solid var(--acc2); outline-offset: 2px; border-color: transparent; }
+  .row { display: flex; gap: var(--s3); align-items: center; flex-wrap: wrap; margin-top: var(--s5); }
+
+  #status { margin-top: var(--s4); font-size: 14px; min-height: 20px; }
+  #status.err  { color: #fca5a5; }
+  #status.busy { color: var(--mut); }
+  #status.ok   { color: var(--acc); }
+  #status .hint { display: block; color: var(--dim); font-size: 13px; margin-top: var(--s1); }
+
+  #result { display: none; }
+  #result.on { display: block; }
+  .result-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); flex-wrap: wrap; }
+  td.val { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; word-break: break-word; }
+  td.val.null { color: var(--dim); font-style: italic; }
+  .mono-raw { white-space: pre-wrap; word-break: break-word; margin: 0; }
+</style>
+</head>
+<body>
+
+<header><div class="wrap"><nav>
+  <a class="brand" href="/">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 2h8l4 4v16H6z" stroke="#4ade80" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 2v4h4" stroke="#4ade80" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 12h6M9 16h4" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/></svg>
+    Fieldcast
+  </a>
+  <a href="/#how">How it works</a>
+  <a href="/#pricing">Pricing</a>
+  <a href="/for/">Use cases</a>
+  <a href="/dene.html">Try it</a>
+</nav></div></header>
+
+<main class="wrap">
+
+  <span class="tag">Free · No signup</span>
+  <h1>Try it in your browser.</h1>
+  <p class="lede">Drop a PDF or paste the text of a document, type the field names you want back — comma separated — and press <strong>Extract</strong>. The same <code>/v1/extract</code> endpoint the API uses does the work, right here.</p>
+  <p class="note">Documents are not stored. Only a call counter (key, month, calls) is recorded for billing.</p>
+
+  <div class="try-grid">
+
+    <div>
+      <div class="drop" id="drop" role="button" tabindex="0" aria-label="Drop a PDF or text file, or click to choose one">
+        <span class="big">Drop a PDF or .txt here</span>
+        <p>or click to choose a file</p>
+      </div>
+      <input type="file" id="fileInput" accept=".pdf,.txt,text/plain,application/pdf" hidden>
+      <p class="note" id="fileInfo" style="margin-top:var(--s2)">No file selected.</p>
+
+      <label class="fld" for="text">…or paste the text</label>
+      <textarea id="text" placeholder="INVOICE INV-2043&#10;Date: 14 August 2026&#10;Total: 1,240.50 EUR"></textarea>
+
+      <label class="fld" for="fields">Fields to extract — comma separated</label>
+      <input type="text" id="fields" value="invoice_number,date,total,currency" placeholder="invoice_number,date,total">
+
+      <label class="fld" for="apiKey">API key</label>
+      <input type="text" id="apiKey" value="demo_key_public" spellcheck="false" autocomplete="off">
+
+      <div class="row">
+        <button class="btn btn-p" id="run" type="button">Extract</button>
+        <button class="btn btn-s" id="reset" type="button">Clear</button>
+      </div>
+
+      <p id="status" role="status" aria-live="polite"></p>
+    </div>
+
+    <div id="result">
+      <div class="result-head">
+        <h2 style="margin:0">Result</h2>
+        <button class="btn btn-s" id="copyBtn" type="button">Copy JSON</button>
+      </div>
+      <p class="note" id="usage"></p>
+      <div class="scroll-x">
+        <table>
+          <thead><tr><th>Field</th><th>Value</th></tr></thead>
+          <tbody id="resultTable"></tbody>
+        </table>
+      </div>
+      <pre><code class="mono-raw" id="resultRaw"></code></pre>
+    </div>
+
+  </div>
+
+  <h2>Prefer the command line?</h2>
+  <pre><code>curl -X POST https://fieldcast-peach.vercel.app/v1/extract \
+  -H "X-API-Key: demo_key_public" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "INVOICE INV-2043 ... Total: 1,240.50", "fields": ["invoice_number","total"]}'</code></pre>
+
+</main>
+
+<footer><div class="wrap">
+  <p>Fieldcast — document extraction API. <a href="/">Home</a> · <a href="/for/">Use cases</a> · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></p>
+</div></footer>
+
+<script>
+(function () {
+  var API = "/v1/extract";
+  var DEFAULT_KEY = "demo_key_public";
+
+  var el = {
+    drop: document.getElementById("drop"),
+    fileInput: document.getElementById("fileInput"),
+    fileInfo: document.getElementById("fileInfo"),
+    text: document.getElementById("text"),
+    fields: document.getElementById("fields"),
+    apiKey: document.getElementById("apiKey"),
+    run: document.getElementById("run"),
+    reset: document.getElementById("reset"),
+    status: document.getElementById("status"),
+    result: document.getElementById("result"),
+    table: document.getElementById("resultTable"),
+    raw: document.getElementById("resultRaw"),
+    usage: document.getElementById("usage"),
+    copyBtn: document.getElementById("copyBtn")
+  };
+
+  var chosenFile = null;
+  var lastJson = "";
+
+  var MESSAGES = {
+    invalid_api_key: "That API key was not accepted. Use demo_key_public, or paste your own key.",
+    quota_exceeded: "The free demo quota is used up. Paste your own API key to keep going.",
+    no_document_text: "No document to extract. Paste some text or choose a PDF / .txt file.",
+    no_fields_requested: "Enter at least one field name, comma separated.",
+    too_many_fields: "Too many fields — the limit is 40.",
+    file_unreadable: "That file could not be read as text. Try a PDF or a plain text file.",
+    extraction_failed: "The extractor could not process this document. Try again."
+  };
+
+  function setStatus(msg, kind, hint) {
+    el.status.className = kind || "";
+    el.status.textContent = msg || "";
+    if (hint) {
+      var s = document.createElement("span");
+      s.className = "hint";
+      s.textContent = hint;
+      el.status.appendChild(s);
+    }
+  }
+
+  function setFile(file) {
+    if (!file) return;
+    var ok = /\.(pdf|txt)$/i.test(file.name) || file.type === "application/pdf" || file.type === "text/plain";
+    if (!ok) {
+      setStatus("Unsupported file type. Use a PDF or a .txt file.", "err");
+      return;
+    }
+    chosenFile = file;
+    el.fileInfo.textContent = "Selected: " + file.name;
+    setStatus("File ready. Press Extract.", "");
+  }
+
+  ["dragenter", "dragover"].forEach(function (ev) {
+    el.drop.addEventListener(ev, function (e) { e.preventDefault(); el.drop.classList.add("hot"); });
+  });
+  ["dragleave", "drop"].forEach(function (ev) {
+    el.drop.addEventListener(ev, function (e) { e.preventDefault(); el.drop.classList.remove("hot"); });
+  });
+  el.drop.addEventListener("drop", function (e) {
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) setFile(e.dataTransfer.files[0]);
+  });
+  el.drop.addEventListener("click", function () { el.fileInput.click(); });
+  el.drop.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); el.fileInput.click(); }
+  });
+  el.fileInput.addEventListener("change", function () { if (el.fileInput.files.length) setFile(el.fileInput.files[0]); });
+
+  function renderRow(key, value) {
+    var tr = document.createElement("tr");
+    var tdK = document.createElement("td");
+    tdK.textContent = key;
+    var tdV = document.createElement("td");
+    tdV.className = "val";
+    if (value === null || value === undefined) {
+      tdV.className += " null";
+      tdV.textContent = "null";
+    } else if (typeof value === "object") {
+      tdV.textContent = JSON.stringify(value);
+    } else {
+      tdV.textContent = String(value);
+    }
+    tr.appendChild(tdK);
+    tr.appendChild(tdV);
+    el.table.appendChild(tr);
+  }
+
+  function showResult(data, usage) {
+    lastJson = JSON.stringify(data, null, 2);
+    el.table.textContent = "";
+    var keys = Object.keys(data);
+    if (!keys.length) {
+      renderRow("(empty)", null);
+    } else {
+      keys.forEach(function (k) { renderRow(k, data[k]); });
+    }
+    el.raw.textContent = lastJson;
+    if (usage) {
+      el.usage.textContent = "Call " + usage.used + " of " + usage.limit + " on the " + usage.plan + " plan this month.";
+    } else {
+      el.usage.textContent = "";
+    }
+    el.result.classList.add("on");
+  }
+
+  el.copyBtn.addEventListener("click", function () {
+    var done = function () {
+      el.copyBtn.textContent = "Copied";
+      setTimeout(function () { el.copyBtn.textContent = "Copy JSON"; }, 1500);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(lastJson).then(done, function () { setStatus("Copy failed — select the JSON and copy manually.", "err"); });
+    } else {
+      setStatus("Copy is not available in this browser — select the JSON and copy manually.", "err");
+    }
+  });
+
+  el.reset.addEventListener("click", function () {
+    chosenFile = null;
+    el.fileInput.value = "";
+    el.fileInfo.textContent = "No file selected.";
+    el.text.value = "";
+    el.fields.value = "invoice_number,date,total,currency";
+    el.result.classList.remove("on");
+    setStatus("", "");
+  });
+
+  function fail(code, fallback) {
+    var msg = MESSAGES[code] || fallback || "Something went wrong. Try again.";
+    setStatus(msg, "err", code ? "error code: " + code : "");
+  }
+
+  el.run.addEventListener("click", function () {
+    el.result.classList.remove("on");
+    var fields = el.fields.value.split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+    if (!fields.length) { fail("no_fields_requested"); return; }
+
+    var key = (el.apiKey.value || "").trim() || DEFAULT_KEY;
+    var text = el.text.value.trim();
+    var init = { method: "POST", headers: { "X-API-Key": key } };
+
+    if (chosenFile) {
+      var fd = new FormData();
+      fd.append("file", chosenFile);
+      fd.append("fields", fields.join(","));
+      init.body = fd;
+    } else if (text) {
+      init.headers["Content-Type"] = "application/json";
+      init.body = JSON.stringify({ text: text, fields: fields });
+    } else {
+      fail("no_document_text");
+      return;
+    }
+
+    el.run.disabled = true;
+    setStatus("Extracting…", "busy");
+
+    fetch(API, init)
+      .then(function (resp) {
+        return resp.json().catch(function () { return {}; }).then(function (body) {
+          return { status: resp.status, body: body };
+        });
+      })
+      .then(function (r) {
+        if (r.status >= 200 && r.status < 300 && r.body && r.body.data) {
+          showResult(r.body.data, r.body.usage);
+          setStatus("Done.", "ok");
+        } else {
+          var code = r.body && r.body.error;
+          fail(code, code ? null : "Request failed (HTTP " + r.status + ").");
+        }
+      })
+      .catch(function () {
+        setStatus("Could not reach the API. Check your connection and try again.", "err");
+      })
+      .then(function () { el.run.disabled = false; });
+  });
+})();
+</script>
+</body>
+</html>
