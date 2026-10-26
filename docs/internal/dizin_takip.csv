@@ -1,10 +1,10 @@
 Sira,Katman,Dizin,URL,DR,Dofollow,Ucret,Varyant,Durum,Kayit_Tarihi,Listeleme_URL,Not
 1,4,x402 Bazaar,https://x402.org/bazaar,,Evet,Ucretsiz,Katman4,KOD ENGELI,,,x402 ucu DEPLOY EDILMEDI. docparse_x402.py var ama cuzdan adresi+mainnet ayari yok. Once yayina alinmali
-2,4,AI Agents List,https://aiagentslist.com/submit,,Evet,Ucretsiz,Katman4,HESAP GEREKLI,,,Login/Sign up arkasinda. Kullanici hesap acinca form doldurulabilir
+2,4,AI Agents List,https://aiagentslist.com/submit,40,Evet,UCRETLI,Katman4,PAS GECILDI,2026-08-29,,UCRETLI: kabul edilse bile tek seferlik 29-49$. Ucretsiz yol YOK. Para harcanmadi.
 3,4,APITracker,https://apitracker.io,,Evet,Ucretsiz,Katman4,ARASTIRILACAK,,,Ana sayfada submit baglantisi bulunamadi
 4,4,AgentHunter,https://agenthunter.io/submit,,Evet,Ucretsiz,Katman4,GONDERILDI,2026-08-28,dashboard: Submitting,GONDERILDI+PUBLISH edildi. Kategori=AI Docs Agents Sektor=Finance Fiyat=Freemium Erisim=API. Logo+ekran goruntusu yuklendi. SART: siteye karsilikli rozet konuldu (index.html footer). 48 saat inceleme.
 5,4,AI Agent Store,https://aiagentstore.ai,,Evet,Ucretsiz,Katman4,YOL ARANACAK,,,/submit-agent ve /submit-ai-agent 404. Ana sayfadaki Submit an AI Agent baglantisindan gidilecek
-6,4,AI Agents Directory,https://aiagentsdirectory.com/submit-agent,,Evet,Ucretsiz,Katman4,HESAP GEREKLI,,,Sign In to Continue butonu. Gunluk guncelleniyor
+6,4,AI Agents Directory,https://aiagentsdirectory.com/submit-agent,,Evet,Ucretsiz,Katman4,YAYINDA,2026-08-29,1 Eki kontrol: aiagentsdirectory.com/agent/fieldcast canli (15 goruntulenme),UCRETSIZ yoldan gonderildi (paralilar 19-499$ ATLANDI). Kategori=AI Docs Agents Erisim=API Fiyat=Freemium. SART: siteye AAD rozeti konuldu. Ucretsizde link NO-FOLLOW.
 7,4,AI Agents Base,https://aiagentsbase.com,,Evet,Ucretsiz,Katman4,OLU,,,Site 404 donuyor - listeden dusuruldu
 8,4,Glama MCP,https://glama.ai/mcp/servers,,Evet,Ucretsiz,Katman4,Atlandi,,,MCP sunucusu YOK - once MCP sarmalayici yazilmali
 9,3,Theres An AI For That,https://theresanaiforthat.com,84,Evet,Ucretsiz,Katman3,Bekliyor,,,En yuksek DR'li AI dizini. Odenmis hizlandirma var
