@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -12,102 +12,294 @@
 <meta property="og:title" content="Fieldcast — Documents to structured JSON in one API call">
 <meta property="og:description" content="You name the fields, Fieldcast returns them typed. No templates, no training data.">
 <meta property="og:type" content="website">
-<link rel="stylesheet" href="/style.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: {
+      bg: '#070810', surface: '#0e1120', surface2: '#151a2e',
+      line: '#232a45', ink: '#f5f7ff', mut: '#a7b0d0', dim: '#6b7499',
+      brand: '#2ee36a', cyan: '#22d3ee', blue: '#5b8bff', violet: '#a78bfa', pink: '#f472b6', amber: '#fbbf24',
+    },
+    fontFamily: { head: ['Space Grotesk','sans-serif'], body: ['Inter','sans-serif'], mono: ['JetBrains Mono','monospace'] },
+    boxShadow: { glow: '0 20px 60px -20px rgba(46,227,106,.45)', card: '0 24px 60px -28px rgba(0,0,0,.85)' },
+  }}
+}
+</script>
+<style>
+  body{background:#070810}
+  /* Aurora mesh */
+  .aurora{position:fixed;inset:-25%;z-index:0;pointer-events:none;filter:saturate(1.25) blur(8px);
+    background:
+      radial-gradient(34% 38% at 16% 12%, rgba(46,227,106,.28), transparent 60%),
+      radial-gradient(32% 36% at 84% 8%,  rgba(34,211,238,.24), transparent 62%),
+      radial-gradient(40% 42% at 88% 60%, rgba(167,139,250,.26), transparent 64%),
+      radial-gradient(38% 40% at 8% 74%,  rgba(244,114,182,.18), transparent 64%);
+    background-size:200% 200%;animation:aurora 18s ease-in-out infinite alternate}
+  @keyframes aurora{0%{background-position:0 0}50%{background-position:100% 60%}100%{background-position:30% 100%}}
+  .grid-lines{position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+    background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse 75% 55% at 50% 0,#000 30%,transparent 80%);mask-image:radial-gradient(ellipse 75% 55% at 50% 0,#000 30%,transparent 80%)}
+  .gradtext{background:linear-gradient(96deg,#fff 0%,#c9d6ff 28%,#7ff0c0 60%,#67d8ff 100%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:sheen 8s linear infinite}
+  @keyframes sheen{to{background-position:200% center}}
+  .tilt{transition:transform .12s ease, box-shadow .25s ease, border-color .25s ease;transform-style:preserve-3d;will-change:transform}
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .7s cubic-bezier(.4,0,.2,1),transform .7s cubic-bezier(.4,0,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+  pre::before{content:"";position:absolute;top:15px;left:18px;width:11px;height:11px;border-radius:50%;background:#ff5f56;box-shadow:19px 0 0 #febc2e,38px 0 0 #28c840}
+  #herobg{position:absolute;top:0;left:0;width:100%;height:940px;z-index:0;background:url('/assets/hero.jpg') center/cover no-repeat;transform:scale(1.06);animation:kenburns 26s ease-in-out infinite alternate;will-change:transform}
+  #herobg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,6,15,.5) 0%,rgba(5,6,15,.32) 38%,rgba(5,6,15,.86) 82%,#05060f 100%)}
+  @keyframes kenburns{from{transform:scale(1.06) translateY(0)}to{transform:scale(1.2) translateY(-14px)}}
+  @media (prefers-reduced-motion:reduce){.aurora,.gradtext,#herobg{animation:none}.reveal{opacity:1;transform:none}*{transition-duration:.001ms!important}}
+</style>
 </head>
-<body>
+<body class="font-body text-ink antialiased overflow-x-hidden">
+<div id="scrollbar" style="position:fixed;top:0;left:0;height:3px;width:0;z-index:60;background:linear-gradient(90deg,#2ee36a,#22d3ee,#a78bfa,#f472b6);box-shadow:0 0 12px rgba(34,211,238,.6)"></div>
+<canvas id="fx" style="position:fixed;inset:0;z-index:0;pointer-events:none;width:100%;height:100%"></canvas>
+<div class="aurora"></div><div class="grid-lines"></div><div id="herobg" aria-hidden="true"></div>
 
-<header><div class="wrap"><nav>
-  <span class="brand">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 2h8l4 4v16H6z" stroke="#4ade80" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 2v4h4" stroke="#4ade80" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 12h6M9 16h4" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/></svg>
-    Fieldcast
-  </span>
-  <a href="#how">How it works</a>
-  <a href="#agents">For agents</a>
-  <a href="#pricing">Pricing</a>
-  <a href="/dene.html">Try it</a>
-  <a href="/for/">Use cases</a>
-  <a href="/alternatives/">Comparisons</a>
-  <a href="#faq">FAQ</a>
-</nav></div></header>
-
-<main class="wrap">
-
-  <span class="tag">Free tier · No credit card</span>
-  <h1>Turn any document into structured JSON in one API call.</h1>
-  <p class="lede">You send a PDF or raw text and name the fields you want. Fieldcast returns them as typed JSON — numbers as numbers, dates normalised to ISO. No templates to draw, no training data to label, no model to fine-tune.</p>
-
-  <div class="cta">
-    <a class="btn btn-p" href="/dene.html">Try it</a>
-    <a class="btn btn-s" href="#how">Read the quickstart</a>
-    <a class="btn btn-s" href="#pricing">See pricing</a>
+<!-- Floating glass navbar -->
+<nav class="fixed top-3 inset-x-3 z-50 max-w-6xl mx-auto rounded-2xl border border-line bg-bg/70 backdrop-blur-xl">
+  <div class="px-5 py-3 flex items-center gap-4">
+    <a href="/" class="flex items-center gap-2 font-head font-bold text-lg mr-auto">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="filter:drop-shadow(0 0 8px rgba(46,227,106,.5))"><path d="M6 2h8l4 4v16H6z" stroke="#2ee36a" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 2v4h4" stroke="#2ee36a" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 12h6M9 16h4" stroke="#22d3ee" stroke-width="1.8" stroke-linecap="round"/></svg>
+      Fieldcast
+    </a>
+    <div class="hidden md:flex items-center gap-6 text-sm text-mut">
+      <a href="#how" class="hover:text-ink transition">How it works</a>
+      <a href="#agents" class="hover:text-ink transition">For agents</a>
+      <a href="#pricing" class="hover:text-ink transition">Pricing</a>
+      <a href="/for/" class="hover:text-ink transition">Use cases</a>
+      <a href="#faq" class="hover:text-ink transition">FAQ</a>
+    </div>
+    <a href="/dene.html" class="text-sm font-semibold px-4 py-2 rounded-xl border border-line hover:border-brand hover:text-brand transition">Try it</a>
+    <a href="#how" class="text-sm font-semibold px-4 py-2 rounded-xl text-[#04140a] bg-gradient-to-r from-brand to-cyan hover:opacity-90 transition">Quickstart</a>
   </div>
-  <p class="note">Built for invoices, receipts, purchase orders, contracts and statements.</p>
+</nav>
 
-  <h2 id="how">One request, one response</h2>
-  <p class="note">Name the fields. Get them back. That is the entire interface.</p>
-<pre><code>curl -X POST https://fieldcast-peach.vercel.app/v1/extract \
+<main class="relative z-10">
+<!-- Hero -->
+<section class="max-w-5xl mx-auto px-5 pt-36 pb-16 text-center">
+  <span class="inline-flex items-center gap-2 text-xs font-semibold px-4 py-1.5 rounded-full border border-cyan/30 bg-gradient-to-r from-brand/15 to-cyan/10 text-[#d7ecff] mb-6">
+    <span class="w-1.5 h-1.5 rounded-full bg-brand shadow-[0_0_8px_#2ee36a]"></span> Free tier · No credit card
+  </span>
+  <h1 class="font-head font-bold tracking-tight leading-[1.03] text-5xl md:text-7xl gradtext mb-6">Turn any document into structured JSON.</h1>
+  <p class="text-mut text-lg md:text-xl max-w-2xl mx-auto mb-9 leading-relaxed">Send a PDF or raw text and name the fields you want. Fieldcast returns them typed — numbers as numbers, dates as ISO. No templates to draw, no training data, no model to fine-tune.</p>
+  <div class="flex flex-col sm:flex-row gap-3 justify-center mb-14">
+    <a href="#how" class="px-7 py-3.5 rounded-xl font-semibold text-[#04140a] bg-gradient-to-r from-brand to-cyan shadow-glow hover:-translate-y-0.5 transition">Read the quickstart</a>
+    <a href="#pricing" class="px-7 py-3.5 rounded-xl font-semibold border border-line bg-surface/60 backdrop-blur hover:border-cyan hover:-translate-y-0.5 transition">See pricing</a>
+  </div>
+  <!-- Stat row (product facts, not traction claims) -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
+    <div class="rounded-2xl border border-line bg-surface/50 backdrop-blur p-5"><div class="font-head text-3xl font-bold text-brand">1</div><div class="text-dim text-sm mt-1">API call</div></div>
+    <div class="rounded-2xl border border-line bg-surface/50 backdrop-blur p-5"><div class="font-head text-3xl font-bold text-cyan">≤40</div><div class="text-dim text-sm mt-1">fields you name</div></div>
+    <div class="rounded-2xl border border-line bg-surface/50 backdrop-blur p-5"><div class="font-head text-3xl font-bold text-violet">$0.01</div><div class="text-dim text-sm mt-1">per x402 call</div></div>
+    <div class="rounded-2xl border border-line bg-surface/50 backdrop-blur p-5"><div class="font-head text-3xl font-bold text-pink">0</div><div class="text-dim text-sm mt-1">templates to draw</div></div>
+  </div>
+  <p class="text-dim text-sm mt-6">Built for the documents your business already runs on.</p>
+</section>
+
+<!-- Marquee -->
+<div class="relative py-6 border-y border-line/60 overflow-hidden select-none" aria-hidden="true">
+  <div class="flex gap-10 whitespace-nowrap will-change-transform" id="marquee" style="animation:marq 26s linear infinite">
+    <span class="marq-set flex gap-10 text-dim font-head text-lg tracking-tight"></span>
+    <span class="marq-set flex gap-10 text-dim font-head text-lg tracking-tight"></span>
+  </div>
+</div>
+<style>@keyframes marq{to{transform:translateX(-50%)}}@media(prefers-reduced-motion:reduce){#marquee{animation:none}}</style>
+
+<!-- How it works -->
+<section id="how" class="max-w-5xl mx-auto px-5 py-16 reveal">
+  <h2 class="font-head text-3xl md:text-4xl font-bold tracking-tight mb-2">One request, one response</h2>
+  <p class="text-mut mb-8">Name the fields. Get them back. That is the entire interface.</p>
+  <div class="grid md:grid-cols-2 gap-4">
+    <pre class="relative font-mono text-[12.5px] leading-relaxed bg-surface/80 border border-line rounded-2xl pt-11 px-5 pb-5 overflow-x-auto shadow-card"><code class="text-[#d8e6ff]">curl -X POST https://fieldcast-peach.vercel.app/v1/extract \
   -H "X-API-Key: demo_key_public" \
   -H "Content-Type: application/json" \
   -d '{
-    "text": "INVOICE INV-2043 ... Date: 14 August 2026 ... Total: 1,240.50 EUR",
-    "fields": ["invoice_number", "date", "total", "currency"]
+    "text": "INVOICE INV-2043 ... Total: 1,240.50 EUR",
+    "fields": ["invoice_number","date","total","currency"]
   }'</code></pre>
-<pre><code>{
+    <pre class="relative font-mono text-[12.5px] leading-relaxed bg-surface/80 border border-line rounded-2xl pt-11 px-5 pb-5 overflow-x-auto shadow-card"><code class="text-[#a7f3c9]">{
   "invoice_number": "INV-2043",
   "date": "2026-08-14",
   "total": 1240.5,
   "currency": "EUR"
 }</code></pre>
-  <p class="note">PDFs work the same way — post the file as multipart with <code>fields=a,b,c</code>. Any field the document does not contain comes back <code>null</code> rather than invented.</p>
-
-  <h2>Why teams pick it</h2>
-  <div class="grid">
-    <div class="card"><h3>No template drawing</h3><p>Template-based parsers break the moment a supplier changes their layout. Fieldcast reads the document, so a new layout is not a new project.</p></div>
-    <div class="card"><h3>Fields you choose</h3><p>Not a fixed invoice schema. Ask for up to 40 fields, named however your database already names them.</p></div>
-    <div class="card"><h3>It returns null, not a guess</h3><p>Missing data comes back as null. A parser that invents a total is worse than one that admits it did not find one.</p></div>
-    <div class="card"><h3>Typed output</h3><p>Totals come back as numbers, dates as ISO-8601. No downstream string cleanup.</p></div>
   </div>
+  <p class="text-dim text-sm mt-4">PDFs work the same way — post the file as multipart with <code class="font-mono text-cyan bg-blue/10 border border-blue/30 rounded px-1.5 py-0.5">fields=a,b,c</code>. Any field the document does not contain comes back <code class="font-mono text-cyan bg-blue/10 border border-blue/30 rounded px-1.5 py-0.5">null</code> rather than invented.</p>
+</section>
 
-  <h2 id="agents">Pay-per-call for AI agents</h2>
-  <p class="lede" style="font-size:17px">Fieldcast also exposes an <strong>x402</strong> endpoint: no signup, no API key. An agent calls it, receives HTTP 402 with payment terms, pays in USDC, and gets the extraction back in the same flow. Live on Base Sepolia (a test network) today.</p>
-  <div class="grid">
-    <div class="card"><h3>No account needed</h3><p>An autonomous agent cannot fill in a signup form. It can pay per call.</p></div>
-    <div class="card"><h3>Settlement in cents</h3><p>$0.01 per extraction. Running on Base Sepolia, a test network — mainnet is not enabled yet.</p></div>
-    <div class="card"><h3>Discoverable</h3><p>Declared to the x402 Bazaar so agents searching for document extraction can find it on their own.</p></div>
+<!-- Features -->
+<section class="max-w-6xl mx-auto px-5 py-16">
+  <div class="text-center mb-12 reveal">
+    <h2 class="font-head text-3xl md:text-4xl font-bold tracking-tight mb-3">Why teams pick it</h2>
+    <p class="text-mut text-lg max-w-2xl mx-auto">Built to survive real-world documents, not just the happy path.</p>
   </div>
+  <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-5" id="features">
+    <div class="tilt reveal group rounded-2xl border border-line bg-surface/50 backdrop-blur p-6 hover:border-line hover:shadow-card">
+      <div class="w-12 h-12 rounded-xl grid place-items-center mb-5 bg-brand/15 text-brand"><svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M4 12h10M4 17h7"/></svg></div>
+      <h3 class="font-head font-semibold text-lg mb-2">No template drawing</h3>
+      <p class="text-mut text-sm leading-relaxed">Template parsers break the moment a supplier changes layout. Fieldcast reads the document, so a new layout is not a new project.</p>
+    </div>
+    <div class="tilt reveal group rounded-2xl border border-line bg-surface/50 backdrop-blur p-6 hover:border-line hover:shadow-card">
+      <div class="w-12 h-12 rounded-xl grid place-items-center mb-5 bg-cyan/15 text-cyan"><svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></div>
+      <h3 class="font-head font-semibold text-lg mb-2">Fields you choose</h3>
+      <p class="text-mut text-sm leading-relaxed">Not a fixed invoice schema. Ask for up to 40 fields, named however your database already names them.</p>
+    </div>
+    <div class="tilt reveal group rounded-2xl border border-line bg-surface/50 backdrop-blur p-6 hover:border-line hover:shadow-card">
+      <div class="w-12 h-12 rounded-xl grid place-items-center mb-5 bg-violet/15 text-violet"><svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></div>
+      <h3 class="font-head font-semibold text-lg mb-2">null, not a guess</h3>
+      <p class="text-mut text-sm leading-relaxed">Missing data comes back as null. A parser that invents a total is worse than one that admits it did not find one.</p>
+    </div>
+    <div class="tilt reveal group rounded-2xl border border-line bg-surface/50 backdrop-blur p-6 hover:border-line hover:shadow-card">
+      <div class="w-12 h-12 rounded-xl grid place-items-center mb-5 bg-pink/15 text-pink"><svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m7 8-4 4 4 4m10-8 4 4-4 4M14 4l-4 16"/></svg></div>
+      <h3 class="font-head font-semibold text-lg mb-2">Typed output</h3>
+      <p class="text-mut text-sm leading-relaxed">Totals come back as numbers, dates as ISO-8601. No downstream string cleanup.</p>
+    </div>
+  </div>
+</section>
 
-  <h2 id="pricing">Pricing</h2>
-  <div class="scroll-x"><table>
-    <thead><tr><th>Plan</th><th>Extractions</th><th>Price</th></tr></thead>
-    <tbody>
-      <tr><td><strong>Free</strong><br><span class="note">While in beta</span></td><td>50 / month</td><td><strong>$0</strong></td></tr>
-      <tr><td><strong>Starter</strong></td><td>1,000 / month</td><td><strong>$19</strong><small> /mo</small></td></tr>
-      <tr><td><strong>Pro</strong></td><td>5,000 / month</td><td><strong>$49</strong><small> /mo</small></td></tr>
-      <tr><td><strong>Agents (x402)</strong></td><td>Unmetered</td><td><strong>$0.01</strong><small> /call &middot; Base Sepolia testnet</small></td></tr>
-    </tbody>
-  </table></div>
-  <p class="note">Every plan uses the same endpoint and the same extraction engine. No feature is held back behind a higher tier.</p>
+<!-- For agents / x402 -->
+<section id="agents" class="max-w-6xl mx-auto px-5 py-16">
+  <div class="rounded-3xl border border-line backdrop-blur p-8 md:p-12 reveal" style="background-image:linear-gradient(135deg,rgba(139,92,246,.22),rgba(15,19,42,.86) 55%,rgba(34,211,238,.18)),url('/assets/band1.jpg');background-size:cover;background-position:center">
+    <div class="max-w-3xl">
+      <span class="inline-block text-xs font-semibold px-3 py-1 rounded-full border border-violet/40 text-violet mb-4">x402 · pay-per-call</span>
+      <h2 class="font-head text-3xl md:text-4xl font-bold tracking-tight mb-4">Pay-per-call for AI agents</h2>
+      <p class="text-mut text-lg leading-relaxed">Fieldcast also exposes an <strong class="text-ink">x402</strong> endpoint: no signup, no API key. An agent calls it, receives HTTP 402 with payment terms, pays in USDC, and gets the extraction back in the same flow. Live on Base Sepolia (a test network) today.</p>
+    </div>
+    <div class="grid md:grid-cols-3 gap-5 mt-8">
+      <div class="rounded-2xl border border-line bg-bg/40 p-6"><h3 class="font-head font-semibold mb-2">No account needed</h3><p class="text-mut text-sm">An autonomous agent cannot fill in a signup form. It can pay per call.</p></div>
+      <div class="rounded-2xl border border-line bg-bg/40 p-6"><h3 class="font-head font-semibold mb-2">Settlement in cents</h3><p class="text-mut text-sm">$0.01 per extraction on Base Sepolia, a test network — mainnet is not enabled yet.</p></div>
+      <div class="rounded-2xl border border-line bg-bg/40 p-6"><h3 class="font-head font-semibold mb-2">Discoverable</h3><p class="text-mut text-sm">Declared to the x402 Bazaar so agents searching for document extraction find it on their own.</p></div>
+    </div>
+  </div>
+</section>
 
-  <h2 id="faq">Frequently asked questions</h2>
-  <details><summary>Do I have to define a template for each document layout?</summary><p>No. You pass a list of field names with the request. Fieldcast reads the document and returns those fields. A supplier changing their invoice layout does not require any change on your side.</p></details>
-  <details><summary>What file types are supported?</summary><p>PDF and plain text today. PDFs are converted to text server-side before extraction. Scanned image-only documents need OCR, which is not yet available.</p></details>
-  <details><summary>What happens if a field is missing from the document?</summary><p>It is returned as <code>null</code>. Fieldcast does not invent values to fill a schema, because a plausible wrong total is more expensive than a missing one.</p></details>
-  <details><summary>How accurate is it?</summary><p>On the reference test — a ten-field invoice — all ten fields were extracted correctly, with dates normalised to ISO-8601 and monetary values returned as numbers. Accuracy on your own documents should be measured on your own documents, which is what the free tier is for.</p></details>
-  <details><summary>Can an AI agent use Fieldcast without an account?</summary><p>Yes. The x402 endpoint requires no API key. The agent receives payment terms as an HTTP 402 response, settles in USDC, and receives the extraction in the same request flow. It runs on Base Sepolia today, a test network, so the payment is not real money yet.</p></details>
-  <details><summary>Is my document stored?</summary><p>Document contents are not persisted. Only a usage counter — API key, month, call count, character count — is recorded for billing.</p></details>
+<!-- Pricing -->
+<section id="pricing" class="max-w-6xl mx-auto px-5 py-16">
+  <div class="text-center mb-12 reveal">
+    <h2 class="font-head text-3xl md:text-4xl font-bold tracking-tight mb-3">Simple, honest pricing</h2>
+    <p class="text-mut text-lg">Every plan uses the same endpoint and the same engine. Nothing held back behind a higher tier.</p>
+  </div>
+  <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-5 items-stretch">
+    <div class="reveal rounded-2xl border border-line bg-surface/50 backdrop-blur p-7 flex flex-col">
+      <h3 class="font-head font-semibold text-lg">Free</h3><p class="text-dim text-sm mb-4">While in beta</p>
+      <div class="mb-5"><span class="font-head text-4xl font-bold">$0</span></div>
+      <p class="text-mut text-sm mb-6">50 extractions / month</p>
+      <a href="#how" class="mt-auto text-center py-2.5 rounded-xl border border-line font-semibold hover:border-brand hover:text-brand transition">Start free</a>
+    </div>
+    <div class="reveal rounded-2xl border border-line bg-surface/50 backdrop-blur p-7 flex flex-col">
+      <h3 class="font-head font-semibold text-lg">Starter</h3><p class="text-dim text-sm mb-4">For small teams</p>
+      <div class="mb-5"><span class="font-head text-4xl font-bold">$19</span><span class="text-dim">/mo</span></div>
+      <p class="text-mut text-sm mb-6">1,000 extractions / month</p>
+      <a href="#how" class="mt-auto text-center py-2.5 rounded-xl border border-line font-semibold hover:border-brand hover:text-brand transition">Choose Starter</a>
+    </div>
+    <div class="reveal rounded-2xl border border-line bg-surface/50 backdrop-blur p-7 flex flex-col">
+      <h3 class="font-head font-semibold text-lg">Pro</h3><p class="text-dim text-sm mb-4">For scaling volume</p>
+      <div class="mb-5"><span class="font-head text-4xl font-bold">$49</span><span class="text-dim">/mo</span></div>
+      <p class="text-mut text-sm mb-6">5,000 extractions / month</p>
+      <a href="#how" class="mt-auto text-center py-2.5 rounded-xl border border-line font-semibold hover:border-brand hover:text-brand transition">Choose Pro</a>
+    </div>
+    <!-- Highlighted: agents -->
+    <div class="reveal relative rounded-2xl border-2 border-transparent bg-gradient-to-br from-violet/20 to-pink/10 backdrop-blur p-7 flex flex-col shadow-card lg:scale-[1.03]" style="background-clip:padding-box">
+      <div class="absolute -top-3 left-1/2 -translate-x-1/2 text-xs font-semibold px-3 py-1 rounded-full text-[#04140a] bg-gradient-to-r from-violet to-pink">For agents</div>
+      <h3 class="font-head font-semibold text-lg bg-gradient-to-r from-violet to-pink bg-clip-text text-transparent">Agents · x402</h3><p class="text-dim text-sm mb-4">No signup, per call</p>
+      <div class="mb-5"><span class="font-head text-4xl font-bold">$0.01</span><span class="text-dim">/call</span></div>
+      <p class="text-mut text-sm mb-6">Unmetered · Base Sepolia testnet</p>
+      <a href="#agents" class="mt-auto text-center py-2.5 rounded-xl font-semibold text-[#04140a] bg-gradient-to-r from-violet to-pink hover:opacity-90 transition">How x402 works</a>
+    </div>
+  </div>
+</section>
 
+<!-- FAQ -->
+<section id="faq" class="max-w-3xl mx-auto px-5 py-16">
+  <h2 class="font-head text-3xl md:text-4xl font-bold tracking-tight mb-8 text-center reveal">Frequently asked questions</h2>
+  <div class="space-y-3" id="faqlist">
+    <details class="reveal rounded-xl border border-line bg-surface/50 backdrop-blur p-4"><summary class="cursor-pointer font-semibold flex gap-3 items-start marker:hidden"><span class="text-cyan font-mono">+</span>Do I have to define a template for each document layout?</summary><p class="text-mut text-sm mt-2 pl-6">No. You pass a list of field names with the request. Fieldcast reads the document and returns those fields. A supplier changing their invoice layout requires no change on your side.</p></details>
+    <details class="reveal rounded-xl border border-line bg-surface/50 backdrop-blur p-4"><summary class="cursor-pointer font-semibold flex gap-3 items-start marker:hidden"><span class="text-cyan font-mono">+</span>What file types are supported?</summary><p class="text-mut text-sm mt-2 pl-6">PDF and plain text today. PDFs are converted to text server-side before extraction. Scanned image-only documents need OCR, which is not yet available.</p></details>
+    <details class="reveal rounded-xl border border-line bg-surface/50 backdrop-blur p-4"><summary class="cursor-pointer font-semibold flex gap-3 items-start marker:hidden"><span class="text-cyan font-mono">+</span>What happens if a field is missing from the document?</summary><p class="text-mut text-sm mt-2 pl-6">It is returned as null. Fieldcast does not invent values to fill a schema, because a plausible wrong total is more expensive than a missing one.</p></details>
+    <details class="reveal rounded-xl border border-line bg-surface/50 backdrop-blur p-4"><summary class="cursor-pointer font-semibold flex gap-3 items-start marker:hidden"><span class="text-cyan font-mono">+</span>How accurate is it?</summary><p class="text-mut text-sm mt-2 pl-6">On the reference ten-field invoice test, all ten fields were extracted correctly, with dates normalised to ISO-8601 and monetary values returned as numbers. Measure accuracy on your own documents — that is what the free tier is for.</p></details>
+    <details class="reveal rounded-xl border border-line bg-surface/50 backdrop-blur p-4"><summary class="cursor-pointer font-semibold flex gap-3 items-start marker:hidden"><span class="text-cyan font-mono">+</span>Can an AI agent use Fieldcast without an account?</summary><p class="text-mut text-sm mt-2 pl-6">Yes. The x402 endpoint requires no API key. The agent receives payment terms as an HTTP 402 response, settles in USDC, and receives the extraction in the same request flow. It runs on Base Sepolia today, a test network.</p></details>
+    <details class="reveal rounded-xl border border-line bg-surface/50 backdrop-blur p-4"><summary class="cursor-pointer font-semibold flex gap-3 items-start marker:hidden"><span class="text-cyan font-mono">+</span>Is my document stored?</summary><p class="text-mut text-sm mt-2 pl-6">Document contents are not persisted. Only a usage counter — API key, month, call count, character count — is recorded for billing.</p></details>
+  </div>
+</section>
+
+<!-- CTA band -->
+<section class="max-w-6xl mx-auto px-5 py-16">
+  <div class="reveal rounded-3xl p-10 md:p-14 text-center border border-line backdrop-blur" style="background-image:linear-gradient(135deg,rgba(46,227,106,.24),rgba(15,19,42,.82) 55%,rgba(139,92,246,.24)),url('/assets/band2.jpg');background-size:cover;background-position:center">
+    <h2 class="font-head text-3xl md:text-5xl font-bold tracking-tight mb-4">Try it on your own documents.</h2>
+    <p class="text-mut text-lg max-w-2xl mx-auto mb-8">The free tier is 50 extractions a month, no credit card. Point it at a real invoice and see the JSON.</p>
+    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+      <a href="#how" class="px-8 py-4 rounded-xl font-semibold text-[#04140a] bg-gradient-to-r from-brand to-cyan shadow-glow hover:-translate-y-0.5 transition">Read the quickstart</a>
+      <a href="/for/" class="px-8 py-4 rounded-xl font-semibold border border-line bg-bg/40 hover:border-cyan hover:-translate-y-0.5 transition">See use cases</a>
+    </div>
+  </div>
+</section>
 </main>
 
-<footer><div class="wrap">
-  <p>Fieldcast — document extraction API. <a href="/for/">Use cases</a> · <a href="/alternatives/">Comparisons</a> · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></p>
-  <p class="note">Built for <a href="/for/bookkeepers">bookkeepers</a>, <a href="/for/agencies">agencies</a> and <a href="/for/agent-builders">AI agent builders</a>.</p>
-  <p class="note">Compared with <a href="/alternatives/docparser">Docparser</a>, <a href="/alternatives/mindee">Mindee</a> and <a href="/alternatives/nanonets">Nanonets</a> — including where each of them is the better choice.</p>
-  <!-- AgentHunter dizin kaydinin sarti: karsilikli rozet (Dark Style).
-       Krem/amber varyant koyu footer'da goze batiyordu; siteyle uyumlu olani secildi.
-       Listeye alinmazsak bu blok kaldirilir. -->
-  <p style="margin-top:20px"><a href="https://www.agenthunter.io?utm_source=badge&amp;utm_medium=embed&amp;utm_campaign=Fieldcast" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);padding:8px 12px;border-radius:8px;text-decoration:none;line-height:1.25"><img src="https://www.agenthunter.io/logo-light.svg" alt="" width="22" height="22" style="height:22px;width:22px;opacity:.85"><span style="display:flex;flex-direction:column"><span style="font-size:11px;color:var(--mut);letter-spacing:.02em">AgentHunter</span><span style="font-size:13px;color:var(--fg);font-weight:600">Featured AI Agent</span></span></a></p>
-</div></footer>
+<!-- Footer -->
+<footer class="relative z-10 border-t border-line bg-bg/80 backdrop-blur mt-8">
+  <div class="max-w-6xl mx-auto px-5 py-12 text-sm text-dim">
+    <div class="flex flex-wrap items-center gap-2 mb-4">
+      <span class="flex items-center gap-2 font-head font-bold text-ink text-base"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 2h8l4 4v16H6z" stroke="#2ee36a" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 2v4h4" stroke="#2ee36a" stroke-width="1.8" stroke-linejoin="round"/></svg>Fieldcast</span>
+    </div>
+    <p class="mb-2">Document extraction API. <a href="/for/" class="text-mut underline hover:text-ink">Use cases</a> · <a href="/alternatives/" class="text-mut underline hover:text-ink">Comparisons</a> · <a href="/privacy.html" class="text-mut underline hover:text-ink">Privacy</a> · <a href="/terms.html" class="text-mut underline hover:text-ink">Terms</a></p>
+    <p class="mb-2">Built for <a href="/for/bookkeepers" class="text-mut underline hover:text-ink">bookkeepers</a>, <a href="/for/agencies" class="text-mut underline hover:text-ink">agencies</a> and <a href="/for/agent-builders" class="text-mut underline hover:text-ink">AI agent builders</a>.</p>
+    <p>Compared with <a href="/alternatives/docparser" class="text-mut underline hover:text-ink">Docparser</a>, <a href="/alternatives/mindee" class="text-mut underline hover:text-ink">Mindee</a> and <a href="/alternatives/nanonets" class="text-mut underline hover:text-ink">Nanonets</a>.</p>
+    <div class="flex flex-wrap gap-3 mt-6">
+      <a href="https://aiagentsdirectory.com/agent/fieldcast" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#22c55e"/><path d="M8 12.4l2.6 2.6L16 9.6" stroke="#04140a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="flex flex-col leading-tight"><span class="text-[11px] text-mut">FEATURED ON</span><span class="text-[13px] text-ink font-semibold">AI Agents Directory</span></span></a>
+      <a href="https://www.agenthunter.io?utm_source=badge&utm_medium=embed&utm_campaign=Fieldcast" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2"><img src="https://www.agenthunter.io/logo-light.svg" alt="" width="22" height="22" style="height:22px;width:22px;opacity:.85"><span class="flex flex-col leading-tight"><span class="text-[11px] text-mut">AgentHunter</span><span class="text-[13px] text-ink font-semibold">Featured AI Agent</span></span></a>
+    </div>
+  </div>
+</footer>
 
+<script>
+(function(){
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var fine = matchMedia('(hover:hover) and (pointer:fine)').matches;
+  var els = document.querySelectorAll('.reveal');
+  if(reduce || !('IntersectionObserver' in window)){ els.forEach(function(e){e.classList.add('in')}); }
+  else{ var io=new IntersectionObserver(function(en){en.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.12,rootMargin:'0px 0px -8% 0px'}); els.forEach(function(e){io.observe(e)}); }
+  if(fine && !reduce){ document.querySelectorAll('.tilt').forEach(function(c){
+    c.addEventListener('pointermove',function(e){var r=c.getBoundingClientRect();var x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;c.style.transform='perspective(900px) rotateX('+(-y*7).toFixed(2)+'deg) rotateY('+(x*9).toFixed(2)+'deg) translateY(-4px)';});
+    c.addEventListener('pointerleave',function(){c.style.transform=''});
+  }); }
+
+  // Scroll progress bar
+  var bar=document.getElementById('scrollbar');
+  function prog(){var h=document.documentElement;var p=h.scrollTop/((h.scrollHeight-h.clientHeight)||1);bar.style.width=(p*100).toFixed(1)+'%';}
+  addEventListener('scroll',prog,{passive:true}); prog();
+
+  // Marquee content
+  var words=['Invoices','Receipts','Purchase orders','Contracts','Bank statements','Delivery notes','Tax forms'];
+  var chip=function(w){return '<span class="inline-flex items-center gap-3">'+w+'<span style="color:#2ee36a">/</span></span>';};
+  document.querySelectorAll('.marq-set').forEach(function(s){s.innerHTML=words.map(chip).join('');});
+
+  // Cinematic plexus canvas (the "alive" hero background)
+  var cv=document.getElementById('fx');
+  if(cv && !reduce){
+    var ctx=cv.getContext('2d'), W,H,DPR,pts,raf,vis=true;
+    var COLORS=['46,227,106','34,211,238','167,139,250','244,114,182'];
+    function size(){DPR=Math.min(devicePixelRatio||1,2);W=cv.width=innerWidth*DPR;H=cv.height=innerHeight*DPR;}
+    function init(){var n=Math.min(Math.floor(innerWidth/16),90);pts=[];for(var i=0;i<n;i++){pts.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.28*DPR,vy:(Math.random()-.5)*.28*DPR,c:COLORS[i%COLORS.length]});}}
+    function frame(){
+      ctx.clearRect(0,0,W,H);
+      var maxd=(140*DPR)*(140*DPR);
+      for(var i=0;i<pts.length;i++){var p=pts[i];p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;}
+      for(var i=0;i<pts.length;i++){for(var j=i+1;j<pts.length;j++){var a=pts[i],b=pts[j];var dx=a.x-b.x,dy=a.y-b.y,d=dx*dx+dy*dy;if(d<maxd){var al=(1-d/maxd)*.5;ctx.strokeStyle='rgba('+a.c+','+al.toFixed(3)+')';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}}}
+      for(var i=0;i<pts.length;i++){var p=pts[i];ctx.fillStyle='rgba('+p.c+',.9)';ctx.beginPath();ctx.arc(p.x,p.y,1.6*DPR,0,6.28);ctx.fill();}
+      raf=requestAnimationFrame(frame);
+    }
+    function start(){cancelAnimationFrame(raf);if(vis)frame();}
+    size();init();start();
+    addEventListener('resize',function(){size();init();},{passive:true});
+    document.addEventListener('visibilitychange',function(){vis=!document.hidden;if(vis)start();else cancelAnimationFrame(raf);});
+  }
+})();
+</script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Fieldcast","applicationCategory":"DeveloperApplication","operatingSystem":"Any","description":"API that turns PDFs and text documents into structured JSON. Callers specify the fields they want and receive them typed, with missing fields returned as null.","offers":[{"@type":"Offer","name":"Free","price":"0","priceCurrency":"USD"},{"@type":"Offer","name":"Starter","price":"19","priceCurrency":"USD"},{"@type":"Offer","name":"Pro","price":"49","priceCurrency":"USD"}]}
 </script>
