@@ -2,9 +2,9 @@
 """Ana ag (eip155:8453) CDP facilitator yapilandirmasi.
 
 X402_NETWORK=eip155:8453 iken facilitator, CDP_API_KEY_ID ve
-CDP_API_KEY_SECRET ile kurulur. Anahtar yoksa POST /x402/extract HTTP 503
-doner ve govdede "ana ag icin CDP anahtari gerekli" yazar; ag sessizce
-eip155:84532 yapilmaz. Test agi yolu CDP anahtari istemez.
+CDP_API_KEY_SECRET ile kurulur. Anahtar yoksa anahtarsiz PayAI facilitator'ina
+dusulur (canli davranis); ag sessizce eip155:84532 yapilmaz. Test agi yolu
+CDP anahtari istemez.
 
 Calistirma:
     python3 api/test_pay_config.py
@@ -30,7 +30,7 @@ GECIS_AYARI = "FIELDCAST_TEST_YORUMLAYICI_KULLANILDI"
 ANA_AG = "eip155:8453"
 TEST_AG = "eip155:84532"
 CDP_URL = "https://api.cdp.coinbase.com/platform/v2/x402"
-MESAJ = "ana ag icin CDP anahtari gerekli"
+PAYAI = "https://facilitator.payai.network"
 TAKLIT_ID = "taklit-anahtar-id"
 TAKLIT_GIZLI = "taklit-anahtar-gizli"
 
@@ -146,7 +146,6 @@ class TestAnaAgCdpYapilandirmasi(unittest.TestCase):
                 "CDP_API_KEY_SECRET": TAKLIT_GIZLI,
             }
         )
-        self.assertIsNone(pay.ANA_AG_HATASI)
         self.assertEqual(pay.NETWORK, ANA_AG)
         self.assertEqual(pay.FACILITATOR_AYARI["network"], ANA_AG)
         self.assertEqual(pay.FACILITATOR_AYARI["url"], CDP_URL)
@@ -213,53 +212,40 @@ class TestAnaAgCdpYapilandirmasi(unittest.TestCase):
         self.assertNotRegex(kaynak, r'CDP_API_KEY_SECRET\s*=\s*["\'][^"\']+["\']')
         self.assertNotRegex(kaynak, r'CDP_API_KEY_ID\s*=\s*["\'][^"\']+["\']')
 
-    def test_anahtar_yokken_503_ve_ag_84532_olmaz(self):
+    def test_anahtar_yokken_payai_ve_ag_84532_olmaz(self):
         pay = pay_modulu({"X402_NETWORK": ANA_AG, "X402_BAZAAR": "0"})
         self.assertEqual(pay.NETWORK, ANA_AG)
-        self.assertIsNone(pay.FACILITATOR_AYARI)
-        self.assertEqual(pay.ANA_AG_HATASI, MESAJ)
-        self.assertIsNone(pay.ROUTES)
+        self.assertEqual(pay.FACILITATOR_AYARI["url"], PAYAI)
+        self.assertEqual(pay.FACILITATOR_AYARI["network"], ANA_AG)
+        self.assertIsNone(pay.FACILITATOR_AYARI["create_headers"])
+        self.assertEqual(pay.ROUTES["POST /x402/extract"].accepts.network, ANA_AG)
         yanit = pay.app.test_client().post(
             "/x402/extract", json={"text": "INVOICE 1", "fields": ["total"]}
         )
-        self.assertEqual(yanit.status_code, 503)
-        govde = yanit.get_json()
-        self.assertIn(MESAJ, govde["detail"])
-        self.assertEqual(govde["error"], "cdp_api_key_required")
-        self.assertIsNone(yanit.headers.get("PAYMENT-REQUIRED"))
-        self.assertNotIn(TEST_AG, json.dumps(govde))
+        self.assertEqual(yanit.status_code, 402)
+        self.assertNotIn(TEST_AG, json.dumps(yanit.get_json() or {}))
         saglik = pay.app.test_client().get("/x402/health").get_json()
+        self.assertEqual(saglik["status"], "ok")
         self.assertEqual(saglik["network"], ANA_AG)
-        self.assertEqual(saglik["status"], "not_configured")
-        self.assertEqual(saglik["ana_ag_hata"], MESAJ)
-        self.assertEqual(saglik["facilitator"], CDP_URL)
+        self.assertEqual(saglik["facilitator"], PAYAI)
         kesif = pay.app.test_client().get("/.well-known/x402").get_json()
-        self.assertIs(kesif["configured"], False)
-        self.assertEqual(kesif["resources"], [])
-        self.assertIn(MESAJ, kesif["not"])
-        kok = pay.app.test_client().get("/x402").get_json()
-        self.assertIs(kok["configured"], False)
-        self.assertEqual(kok["network"], ANA_AG)
+        self.assertIs(kesif["configured"], True)
+        self.assertEqual(kesif["facilitator"], PAYAI)
 
-    def test_anahtarin_yarisi_da_503(self):
+    def test_anahtarin_yarisi_da_payai(self):
         for ortam in (
             {"CDP_API_KEY_ID": TAKLIT_ID},
             {"CDP_API_KEY_SECRET": TAKLIT_GIZLI},
             {"CDP_API_KEY_ID": "  ", "CDP_API_KEY_SECRET": TAKLIT_GIZLI},
         ):
             with self.subTest(ortam=sorted(ortam)):
-                pay = pay_modulu(dict(ortam, X402_NETWORK=ANA_AG))
+                pay = pay_modulu(dict(ortam, X402_NETWORK=ANA_AG, X402_BAZAAR="0"))
                 self.assertEqual(pay.NETWORK, ANA_AG)
-                yanit = pay.app.test_client().post(
-                    "/x402/extract", json={"text": "x", "fields": ["a"]}
-                )
-                self.assertEqual(yanit.status_code, 503)
-                self.assertIn(MESAJ, yanit.get_json()["detail"])
+                self.assertEqual(pay.FACILITATOR_AYARI["url"], PAYAI)
 
     def test_testnet_cdp_anahtarisiz_ayri_kalir(self):
         pay = pay_modulu({"X402_NETWORK": TEST_AG, "X402_BAZAAR": "0"})
         self.assertEqual(pay.NETWORK, TEST_AG)
-        self.assertIsNone(pay.ANA_AG_HATASI)
         self.assertEqual(pay.FACILITATOR_AYARI["network"], TEST_AG)
         self.assertNotEqual(pay.FACILITATOR_AYARI["url"], CDP_URL)
         self.assertIsNone(pay.FACILITATOR_AYARI["create_headers"])
@@ -277,7 +263,6 @@ class TestAnaAgCdpYapilandirmasi(unittest.TestCase):
         self.assertEqual(pay.NETWORK, TEST_AG)
         self.assertEqual(pay.FACILITATOR_AYARI["network"], TEST_AG)
         self.assertNotEqual(pay.FACILITATOR_AYARI["url"], CDP_URL)
-        self.assertIsNone(pay.ANA_AG_HATASI)
 
 
 if __name__ == "__main__":

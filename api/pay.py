@@ -8,10 +8,10 @@ AG SECIMI:
   Public x402.org/facilitator mainnet'i TASIYAMAZ; /supported ciktisinda aglar
   sadece test aglari (eip155:84532 var, eip155:8453 yok). Test agi yolu
   https://facilitator.payai.network adresini kullanir (X402_FACILITATOR_URL).
-  Ana ag (eip155:8453) ayri yoldur: facilitator yapilandirmasi CDP_API_KEY_ID
-  ve CDP_API_KEY_SECRET ortam degiskenlerinden uretilir. Anahtar yoksa uc
-  HTTP 503 doner; ag eip155:84532 yapilmaz. Anahtarlar koda gomulmez.
-  Anahtar varken gercek USDC akabilir. Fiyat $0.01/cag.
+  Ana ag (eip155:8453): CDP_API_KEY_ID ve CDP_API_KEY_SECRET varsa CDP
+  facilitator'i kullanilir; yoksa anahtarsiz PayAI facilitator'ina dusulur
+  (/supported icinde eip155:8453 + exact var). Ag eip155:84532 yapilmaz.
+  Anahtarlar koda gomulmez. Gercek USDC akar. Fiyat $0.01/cag.
   Test agi: X402_NETWORK=eip155:84532 (sanal para, CDP anahtari istemez).
 
 DEPLOY GUVENLIGI: adres varsayilandir, ama X402_PAY_TO="" ile BOS birakilirsa
@@ -33,7 +33,7 @@ from index import db, extract_fields, read_document_from_request, record_call
 
 # Ucunun kimligi. Hepsi ENV ile override edilebilir; Vercel'de .env yazilir.
 # X402_PAY_TO="" verilirse adres bilerek boslasir -> uc 503 doner (asagiya bak).
-# Ana ag facilitator'i PayAI degil: CDP anahtarindan uretilir (asagiya bak).
+# Ana ag: CDP anahtari varsa CDP facilitator'i, yoksa PayAI (asagiya bak).
 PAY_TO = os.environ.get(
     "X402_PAY_TO", "0x3f425d6ffd2855585483d65da684651e330759e0"
 ).strip()
@@ -50,11 +50,10 @@ IS_TESTNET = NETWORK != ANA_AG
 # CDP facilitator adresi (Coinbase CDP SDK: api.cdp.coinbase.com + /platform/v2/x402).
 # Anahtarlar burada durmaz; yalnizca CDP_API_KEY_ID / CDP_API_KEY_SECRET okunur.
 CDP_FACILITATOR_URL = "https://api.cdp.coinbase.com/platform/v2/x402"
-ANA_AG_ANAHTAR_MESAJI = "ana ag icin CDP anahtari gerekli"
 
 
 def cdp_anahtari():
-    """CDP anahtar cifti. Biri bile bos ise ana ag facilitator'i kurulamaz."""
+    """CDP anahtar cifti. Biri bile bos ise None (PayAI kullanilir)."""
     key_id = os.environ.get("CDP_API_KEY_ID", "").strip()
     secret = os.environ.get("CDP_API_KEY_SECRET", "").strip()
     if key_id and secret:
@@ -80,27 +79,25 @@ def cdp_create_headers(key_id, secret):
 def facilitator_ayari_kur():
     """Testnet ile ana ag facilitator ayarini ayri uret.
 
-    Ana ag anahtarsizsa (None, mesaj) doner. NETWORK degerini degistirmez;
-    eip155:8453 anahtarsizken eip155:84532'ye dusulmez.
+    Ana ag anahtarsizsa PayAI (FACILITATOR_URL) kullanilir. NETWORK degerini
+    degistirmez; eip155:8453 anahtarsizken eip155:84532'ye dusulmez.
     """
-    if NETWORK == ANA_AG:
-        anahtar = cdp_anahtari()
-        if anahtar is None:
-            return None, ANA_AG_ANAHTAR_MESAJI
+    anahtar = cdp_anahtari() if NETWORK == ANA_AG else None
+    if anahtar:
         key_id, secret = anahtar
         return {
             "url": CDP_FACILITATOR_URL,
             "network": ANA_AG,
             "create_headers": cdp_create_headers(key_id, secret),
-        }, None
+        }
     return {
         "url": FACILITATOR_URL,
         "network": NETWORK,
         "create_headers": None,
-    }, None
+    }
 
 
-FACILITATOR_AYARI, ANA_AG_HATASI = facilitator_ayari_kur()
+FACILITATOR_AYARI = facilitator_ayari_kur()
 AG_ETIKETI = (
     "Base (ana ag, gercek USDC)" if not IS_TESTNET
     else f"test agi ({NETWORK}, sanal para)"
@@ -139,7 +136,7 @@ def index_route():
             "network": NETWORK,
             "testnet": IS_TESTNET,
             "para": "sanal" if IS_TESTNET else "GERCEK USDC",
-            "configured": bool(PAY_TO) and not ANA_AG_HATASI,
+            "configured": bool(PAY_TO),
         }
     )
 
@@ -154,19 +151,14 @@ def health():
     """
     return jsonify(
         {
-            "status": "ok" if PAY_TO and not ANA_AG_HATASI else "not_configured",
+            "status": "ok" if PAY_TO else "not_configured",
             "network": NETWORK,
             "testnet": IS_TESTNET,
             "para": "sanal" if IS_TESTNET else "GERCEK USDC",
             "aciklama": AG_ETIKETI,
             "price": PRICE,
             "pay_to": PAY_TO,
-            "facilitator": (
-                FACILITATOR_AYARI["url"]
-                if FACILITATOR_AYARI
-                else (CDP_FACILITATOR_URL if NETWORK == ANA_AG else FACILITATOR_URL)
-            ),
-            **({"ana_ag_hata": ANA_AG_HATASI} if ANA_AG_HATASI else {}),
+            "facilitator": FACILITATOR_AYARI["url"],
         }
     )
 
@@ -189,7 +181,7 @@ ICERIK UYDURULMAZ: manifest, odeme katmaninin gercekten kullandigi
     var-olmayan bir odemeli ucu listelemez.
     """
     kaynak = request.url_root.rstrip("/")
-    if not PAY_TO or ANA_AG_HATASI:
+    if not PAY_TO:
         return jsonify(
             {
                 "x402Version": 2,
@@ -197,12 +189,8 @@ ICERIK UYDURULMAZ: manifest, odeme katmaninin gercekten kullandigi
                 "configured": False,
                 "resources": [],
                 "health": "/x402/health",
-                "not": (
-                    ANA_AG_ANAHTAR_MESAJI
-                    if ANA_AG_HATASI and PAY_TO
-                    else "X402_PAY_TO is not set on this deployment; "
-                    "no paid endpoint is published here."
-                ),
+                "not": "X402_PAY_TO is not set on this deployment; "
+                "no paid endpoint is published here.",
             }
         )
 
@@ -215,9 +203,7 @@ ICERIK UYDURULMAZ: manifest, odeme katmaninin gercekten kullandigi
                 "description": "Turn PDFs and raw text into structured JSON. Pay per call in USDC.",
             },
             "configured": True,
-            "facilitator": (
-                FACILITATOR_AYARI["url"] if FACILITATOR_AYARI else FACILITATOR_URL
-            ),
+            "facilitator": FACILITATOR_AYARI["url"],
             "health": "/x402/health",
             "resources": [
                 {
@@ -325,23 +311,6 @@ if not PAY_TO:
         )
 
     app.post("/x402/extract")(extract_yapilandirilmamis)
-    ROUTES = None
-    FACILITATOR_ISTEMCI = None
-
-elif ANA_AG_HATASI:
-
-    def extract_ana_ag_anahtarsiz():
-        return (
-            jsonify(
-                {
-                    "error": "cdp_api_key_required",
-                    "detail": ANA_AG_ANAHTAR_MESAJI,
-                }
-            ),
-            503,
-        )
-
-    app.post("/x402/extract")(extract_ana_ag_anahtarsiz)
     ROUTES = None
     FACILITATOR_ISTEMCI = None
 
