@@ -1,8 +1,8 @@
 {
   "name": "Fieldcast",
   "description": "Turn PDFs and raw text into structured JSON. Pay per call in USDC.",
-  "url": "https://fieldcast-peach.vercel.app",
-  "documentationUrl": "https://fieldcast-peach.vercel.app/openapi.json",
+  "url": "https://fieldcast-kopya.muhammetkarakurt1234.workers.dev",
+  "documentationUrl": "https://fieldcast-kopya.muhammetkarakurt1234.workers.dev/openapi.json",
   "capabilities": {
     "streaming": false
   },
@@ -19,7 +19,7 @@
     }
   ],
   "x402": {
-    "endpoint": "https://fieldcast-peach.vercel.app/x402/extract",
+    "endpoint": "https://fieldcast-kopya.muhammetkarakurt1234.workers.dev/x402/extract",
     "price": "$0.01",
     "network": "eip155:8453",
     "description": "Extract structured data from a document. Send raw text or a PDF plus the list of field names you want, and receive those fields back as typed JSON.",
