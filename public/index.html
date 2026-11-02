@@ -46,6 +46,9 @@ tailwind.config = {
   .gradtext{background:linear-gradient(96deg,#fff 0%,#c9d6ff 28%,#7ff0c0 60%,#67d8ff 100%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:sheen 8s linear infinite}
   @keyframes sheen{to{background-position:200% center}}
   .tilt{transition:transform .12s ease, box-shadow .25s ease, border-color .25s ease;transform-style:preserve-3d;will-change:transform}
+  .data-console{position:relative;max-width:920px;margin:0 auto 56px;padding:1px;border:1px solid rgba(107,213,210,.3);border-radius:24px;background:linear-gradient(135deg,rgba(107,213,210,.35),rgba(139,92,246,.16),rgba(214,168,91,.3));box-shadow:0 30px 100px -40px rgba(34,211,238,.45);overflow:hidden;transform:perspective(1200px) rotateX(2deg)}
+  .data-console-inner{padding:20px;background:linear-gradient(145deg,rgba(11,19,37,.96),rgba(16,19,42,.82));border-radius:23px;text-align:left}
+  .console-top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px;color:#a7b0d0;font:11px 'JetBrains Mono',monospace;letter-spacing:.04em}.console-status{display:inline-flex;align-items:center;gap:7px;color:#7ff0c0}.console-status i{width:7px;height:7px;border-radius:50%;background:#2ee36a;box-shadow:0 0 12px #2ee36a;animation:pulse 1.8s ease-in-out infinite}.console-body{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}.console-pane{min-height:170px;padding:18px;border:1px solid #263452;border-radius:15px;background:rgba(5,8,18,.52)}.console-label{margin-bottom:14px;color:#7e8bad;font:10px 'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.12em}.doc-line{height:8px;margin:10px 0;border-radius:99px;background:linear-gradient(90deg,#33476b 0 56%,transparent 56%)}.doc-line.short{width:68%}.doc-line.tiny{width:42%}.json-line{font:13px/2 'JetBrains Mono',monospace;color:#c9d6ff}.json-line .key{color:#6bd5d2}.json-line .value{color:#d6a85b}.scan-line{height:2px;margin-top:18px;background:linear-gradient(90deg,transparent,#6bd5d2,transparent);box-shadow:0 0 14px #6bd5d2;animation:scan 3.6s ease-in-out infinite}.console-footer{display:flex;justify-content:space-between;gap:12px;margin-top:16px;color:#71819b;font-size:11px}.console-footer b{color:#fff;font-weight:600}@keyframes scan{0%,100%{transform:translateY(-20px);opacity:.1}50%{transform:translateY(80px);opacity:1}}@keyframes pulse{50%{opacity:.45;transform:scale(.7)}}
   .reveal{opacity:0;transform:translateY(26px);transition:opacity .7s cubic-bezier(.4,0,.2,1),transform .7s cubic-bezier(.4,0,.2,1)}
   .reveal.in{opacity:1;transform:none}
   pre::before{content:"";position:absolute;top:15px;left:18px;width:11px;height:11px;border-radius:50%;background:#ff5f56;box-shadow:19px 0 0 #febc2e,38px 0 0 #28c840}
@@ -81,15 +84,25 @@ tailwind.config = {
 
 <main class="relative z-10">
 <!-- Hero -->
-<section class="max-w-5xl mx-auto px-5 pt-36 pb-16 text-center">
+<section class="max-w-6xl mx-auto px-5 pt-36 pb-16 text-center">
   <span class="inline-flex items-center gap-2 text-xs font-semibold px-4 py-1.5 rounded-full border border-cyan/30 bg-gradient-to-r from-brand/15 to-cyan/10 text-[#d7ecff] mb-6">
-    <span class="w-1.5 h-1.5 rounded-full bg-brand shadow-[0_0_8px_#2ee36a]"></span> Free tier · No credit card
+    <span class="w-1.5 h-1.5 rounded-full bg-brand shadow-[0_0_8px_#2ee36a]"></span> Fast & reliable real-time data · Fieldcast API
   </span>
-  <h1 class="font-head font-bold tracking-tight leading-[1.03] text-5xl md:text-7xl gradtext mb-6">Turn any document into structured JSON.</h1>
-  <p class="text-mut text-lg md:text-xl max-w-2xl mx-auto mb-9 leading-relaxed">Send a PDF or raw text and name the fields you want. Fieldcast returns them typed — numbers as numbers, dates as ISO. No templates to draw, no training data, no model to fine-tune.</p>
+  <h1 class="font-head font-bold tracking-tight leading-[1.03] text-5xl md:text-7xl gradtext mb-6">Data you can trust from every document.</h1>
+  <p class="text-mut text-lg md:text-xl max-w-2xl mx-auto mb-9 leading-relaxed">Send a PDF or raw text and name the fields you need. Fieldcast returns clean, typed JSON for your workflow, database, or AI agent.</p>
   <div class="flex flex-col sm:flex-row gap-3 justify-center mb-14">
-    <a href="#how" class="px-7 py-3.5 rounded-xl font-semibold text-[#04140a] bg-gradient-to-r from-brand to-cyan shadow-glow hover:-translate-y-0.5 transition">Read the quickstart</a>
+    <a href="/dene.html" class="px-7 py-3.5 rounded-xl font-semibold text-[#04140a] bg-gradient-to-r from-brand to-cyan shadow-glow hover:-translate-y-0.5 transition">Get a live demo</a>
     <a href="#pricing" class="px-7 py-3.5 rounded-xl font-semibold border border-line bg-surface/60 backdrop-blur hover:border-cyan hover:-translate-y-0.5 transition">See pricing</a>
+  </div>
+  <div class="data-console reveal" aria-label="Live extraction preview">
+    <div class="data-console-inner">
+      <div class="console-top"><span>FIELDCAST / EXTRACTION STREAM</span><span class="console-status"><i></i>LIVE PREVIEW</span></div>
+      <div class="console-body">
+        <div class="console-pane"><div class="console-label">Incoming document · invoice.pdf</div><div class="doc-line"></div><div class="doc-line short"></div><div class="doc-line tiny"></div><div class="doc-line"></div><div class="scan-line"></div></div>
+        <div class="console-pane"><div class="console-label">Structured response · JSON</div><div class="json-line">{</div><div class="json-line">&nbsp;&nbsp;<span class="key">"invoice_number"</span>: <span class="value">"INV-2043"</span>,</div><div class="json-line">&nbsp;&nbsp;<span class="key">"total"</span>: <span class="value">1240.50</span>,</div><div class="json-line">&nbsp;&nbsp;<span class="key">"currency"</span>: <span class="value">"EUR"</span></div><div class="json-line">}</div></div>
+      </div>
+      <div class="console-footer"><span>Fields detected <b>4 / 4</b></span><span>Latency <b>1.8s</b></span><span>Output <b>typed JSON</b></span></div>
+    </div>
   </div>
   <!-- Stat row (product facts, not traction claims) -->
   <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
@@ -168,11 +181,11 @@ tailwind.config = {
     <div class="max-w-3xl">
       <span class="inline-block text-xs font-semibold px-3 py-1 rounded-full border border-violet/40 text-violet mb-4">x402 · pay-per-call</span>
       <h2 class="font-head text-3xl md:text-4xl font-bold tracking-tight mb-4">Pay-per-call for AI agents</h2>
-      <p class="text-mut text-lg leading-relaxed">Fieldcast also exposes an <strong class="text-ink">x402</strong> endpoint: no signup, no API key. An agent calls it, receives HTTP 402 with payment terms, pays in USDC, and gets the extraction back in the same flow. Live on Base Sepolia (a test network) today.</p>
+      <p class="text-mut text-lg leading-relaxed">Fieldcast also exposes an <strong class="text-ink">x402</strong> endpoint: no signup, no API key. An agent calls it, receives HTTP 402 with payment terms, pays in USDC, and gets the extraction back in the same flow. Live on Base mainnet today.</p>
     </div>
     <div class="grid md:grid-cols-3 gap-5 mt-8">
       <div class="rounded-2xl border border-line bg-bg/40 p-6"><h3 class="font-head font-semibold mb-2">No account needed</h3><p class="text-mut text-sm">An autonomous agent cannot fill in a signup form. It can pay per call.</p></div>
-      <div class="rounded-2xl border border-line bg-bg/40 p-6"><h3 class="font-head font-semibold mb-2">Settlement in cents</h3><p class="text-mut text-sm">$0.01 per extraction on Base Sepolia, a test network — mainnet is not enabled yet.</p></div>
+      <div class="rounded-2xl border border-line bg-bg/40 p-6"><h3 class="font-head font-semibold mb-2">Settlement in cents</h3><p class="text-mut text-sm">$0.01 per document, paid in USDC on Base mainnet.</p></div>
       <div class="rounded-2xl border border-line bg-bg/40 p-6"><h3 class="font-head font-semibold mb-2">Discoverable</h3><p class="text-mut text-sm">Declared to the x402 Bazaar so agents searching for document extraction find it on their own.</p></div>
     </div>
   </div>
@@ -208,7 +221,7 @@ tailwind.config = {
       <div class="absolute -top-3 left-1/2 -translate-x-1/2 text-xs font-semibold px-3 py-1 rounded-full text-[#04140a] bg-gradient-to-r from-violet to-pink">For agents</div>
       <h3 class="font-head font-semibold text-lg bg-gradient-to-r from-violet to-pink bg-clip-text text-transparent">Agents · x402</h3><p class="text-dim text-sm mb-4">No signup, per call</p>
       <div class="mb-5"><span class="font-head text-4xl font-bold">$0.01</span><span class="text-dim">/call</span></div>
-      <p class="text-mut text-sm mb-6">Unmetered · Base Sepolia testnet</p>
+      <p class="text-mut text-sm mb-6">Unmetered · USDC on Base mainnet</p>
       <a href="#agents" class="mt-auto text-center py-2.5 rounded-xl font-semibold text-[#04140a] bg-gradient-to-r from-violet to-pink hover:opacity-90 transition">How x402 works</a>
     </div>
   </div>
@@ -222,7 +235,7 @@ tailwind.config = {
     <details class="reveal rounded-xl border border-line bg-surface/50 backdrop-blur p-4"><summary class="cursor-pointer font-semibold flex gap-3 items-start marker:hidden"><span class="text-cyan font-mono">+</span>What file types are supported?</summary><p class="text-mut text-sm mt-2 pl-6">PDF and plain text today. PDFs are converted to text server-side before extraction. Scanned image-only documents need OCR, which is not yet available.</p></details>
     <details class="reveal rounded-xl border border-line bg-surface/50 backdrop-blur p-4"><summary class="cursor-pointer font-semibold flex gap-3 items-start marker:hidden"><span class="text-cyan font-mono">+</span>What happens if a field is missing from the document?</summary><p class="text-mut text-sm mt-2 pl-6">It is returned as null. Fieldcast does not invent values to fill a schema, because a plausible wrong total is more expensive than a missing one.</p></details>
     <details class="reveal rounded-xl border border-line bg-surface/50 backdrop-blur p-4"><summary class="cursor-pointer font-semibold flex gap-3 items-start marker:hidden"><span class="text-cyan font-mono">+</span>How accurate is it?</summary><p class="text-mut text-sm mt-2 pl-6">On the reference ten-field invoice test, all ten fields were extracted correctly, with dates normalised to ISO-8601 and monetary values returned as numbers. Measure accuracy on your own documents — that is what the free tier is for.</p></details>
-    <details class="reveal rounded-xl border border-line bg-surface/50 backdrop-blur p-4"><summary class="cursor-pointer font-semibold flex gap-3 items-start marker:hidden"><span class="text-cyan font-mono">+</span>Can an AI agent use Fieldcast without an account?</summary><p class="text-mut text-sm mt-2 pl-6">Yes. The x402 endpoint requires no API key. The agent receives payment terms as an HTTP 402 response, settles in USDC, and receives the extraction in the same request flow. It runs on Base Sepolia today, a test network.</p></details>
+    <details class="reveal rounded-xl border border-line bg-surface/50 backdrop-blur p-4"><summary class="cursor-pointer font-semibold flex gap-3 items-start marker:hidden"><span class="text-cyan font-mono">+</span>Can an AI agent use Fieldcast without an account?</summary><p class="text-mut text-sm mt-2 pl-6">Yes. The x402 endpoint requires no API key. The agent receives payment terms as an HTTP 402 response, settles in USDC, and receives the extraction in the same request flow. It runs on Base mainnet: $0.01 per document in USDC.</p></details>
     <details class="reveal rounded-xl border border-line bg-surface/50 backdrop-blur p-4"><summary class="cursor-pointer font-semibold flex gap-3 items-start marker:hidden"><span class="text-cyan font-mono">+</span>Is my document stored?</summary><p class="text-mut text-sm mt-2 pl-6">Document contents are not persisted. Only a usage counter — API key, month, call count, character count — is recorded for billing.</p></details>
   </div>
 </section>

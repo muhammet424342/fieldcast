@@ -1,316 +1,36 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Try Fieldcast — extract JSON from a document in your browser</title>
-<meta name="description" content="Drop a PDF or paste text, type the field names you want, and see the structured JSON come back. No signup, no install.">
-<link rel="icon" href="/favicon.ico" sizes="any">
-<link rel="icon" href="/logo.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta name="robots" content="noindex">
-<link rel="stylesheet" href="/style.css">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Try Fieldcast — document intelligence</title>
+<meta name="description" content="Turn a document into structured JSON with Fieldcast.">
+<link rel="icon" href="/logo.svg" type="image/svg+xml"><link rel="stylesheet" href="/style.css">
 <style>
-  /* Sadece bu sayfaya ozel parcalar; renk/olcu degiskenleri style.css'ten gelir. */
-  .try-grid { display: grid; gap: var(--s5); grid-template-columns: 1fr; }
-  @media (min-width: 760px) { .try-grid { grid-template-columns: 1.1fr .9fr; align-items: start; } }
-
-  .drop {
-    border: 1.5px dashed var(--line-2);
-    border-radius: var(--r);
-    background: var(--panel);
-    padding: var(--s6) var(--s5);
-    text-align: center;
-    transition: border-color .2s var(--ease), background-color .2s var(--ease);
-    cursor: pointer;
-  }
-  .drop:hover, .drop.hot { border-color: var(--acc); background: var(--panel-2); }
-  .drop p { margin: var(--s2) 0 0; color: var(--mut); font-size: 14px; }
-  .drop .big { color: var(--fg); font-weight: 600; font-size: 15px; }
-
-  label.fld { display: block; font-size: 13px; color: var(--mut); margin: var(--s5) 0 var(--s1); font-weight: 500; }
-  input[type=text], input[type=password], textarea {
-    width: 100%; background: var(--panel); color: var(--fg);
-    border: 1px solid var(--line-2); border-radius: 8px;
-    padding: 11px 12px; font: inherit; font-size: 14.5px;
-  }
-  textarea { min-height: 130px; resize: vertical; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; }
-  input:focus, textarea:focus { outline: 2px solid var(--acc2, var(--acc)); outline-offset: 2px; border-color: transparent; }
-  .row { display: flex; gap: var(--s3); align-items: center; flex-wrap: wrap; margin-top: var(--s5); }
-
-  #status { margin-top: var(--s4); font-size: 14px; min-height: 20px; }
-  #status.err  { color: #fca5a5; }
-  #status.busy { color: var(--mut); }
-  #status.ok   { color: var(--acc); }
-  #status .hint { display: block; color: var(--dim); font-size: 13px; margin-top: var(--s1); }
-
-  #result { display: none; }
-  #result.on { display: block; }
-  .result-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); flex-wrap: wrap; }
-  td.val { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; word-break: break-word; }
-  td.val.null { color: var(--dim); font-style: italic; }
-  .mono-raw { white-space: pre-wrap; word-break: break-word; margin: 0; }
+:root{--ink:#e8edf7;--muted:#93a0b8;--line:#26334a;--panel:#111a2c;--gold:#d6a85b;--cyan:#6bd5d2}
+body.try-page{background:#080d18;color:var(--ink);min-height:100vh}body.try-page:before{background:radial-gradient(circle at 12% 2%,rgba(73,105,178,.22),transparent 32%);opacity:1}body.try-page:after{background:radial-gradient(circle at 92% 28%,rgba(214,168,91,.1),transparent 24%);opacity:1}body.try-page header{background:rgba(8,13,24,.8);border-color:rgba(148,163,184,.18);backdrop-filter:blur(18px)}body.try-page header nav a{color:#aeb9cc}body.try-page header nav a:hover,body.try-page header nav a.active{color:#fff}body.try-page .brand{color:#fff}.brand-mark{display:grid;place-items:center;width:28px;height:28px;border:1px solid rgba(214,168,91,.55);border-radius:9px;color:var(--gold);background:rgba(214,168,91,.08)}
+body.try-page:before{background:radial-gradient(42% 40% at 12% 12%,rgba(79,116,212,.28),transparent 65%),radial-gradient(30% 34% at 88% 18%,rgba(214,168,91,.18),transparent 68%),radial-gradient(38% 42% at 72% 78%,rgba(48,183,190,.13),transparent 70%);background-size:160% 160%;filter:blur(8px);animation:field-aurora 18s ease-in-out infinite alternate}body.try-page:after{background-image:linear-gradient(rgba(151,174,214,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(151,174,214,.055) 1px,transparent 1px),radial-gradient(ellipse 70% 45% at 50% 0%,transparent 20%,rgba(8,13,24,.8) 82%);background-size:58px 58px,58px 58px,100% 100%;mask-image:none;-webkit-mask-image:none;opacity:.72;animation:field-grid 26s linear infinite}@keyframes field-aurora{0%{background-position:0% 0%;transform:scale(1)}50%{background-position:100% 42%;transform:scale(1.06)}100%{background-position:30% 100%;transform:scale(1)}}@keyframes field-grid{from{background-position:0 0,0 0,0 0}to{background-position:58px 58px,-58px 58px,0 0}}
+main.wrap{max-width:1180px;padding-top:clamp(42px,7vw,82px);padding-bottom:80px}.try-hero{display:flex;align-items:end;justify-content:space-between;gap:32px;margin-bottom:34px}.eyebrow{display:flex;align-items:center;gap:9px;color:var(--gold);font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}.eyebrow i{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 14px var(--cyan)}.try-hero h1{max-width:760px;margin:14px 0 10px;background:linear-gradient(105deg,#fff 15%,#c9d5e9 70%,#8ba4c7);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:#fff;font-size:clamp(42px,6vw,78px);line-height:.98;letter-spacing:-.055em}.try-hero .lede{max-width:640px;color:var(--muted);font-size:17px;line-height:1.65}.hero-meta{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}.metric{min-width:92px;padding:12px 14px;border:1px solid var(--line);border-radius:13px;background:rgba(17,26,44,.72)}.metric b{display:block;color:#fff;font-size:14px}.metric span{display:block;margin-top:4px;color:var(--muted);font-size:11px}
+.try-grid{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(330px,.88fr);gap:18px;align-items:start}.workspace-card{position:relative;overflow:hidden;background:linear-gradient(145deg,rgba(18,28,47,.94),rgba(11,18,32,.96));border:1px solid var(--line);border-radius:20px;padding:clamp(20px,3vw,32px);box-shadow:0 30px 80px -48px #000}.workspace-card:before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(120deg,rgba(255,255,255,.035),transparent 34%)}.source-title,.result-head{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:22px}.source-title h2,.result-head h2{margin:0;color:#fff;font-size:20px;letter-spacing:-.02em}.source-title p,.result-head p{margin:6px 0 0;color:var(--muted);font-size:13px}.note{color:#8090a9;font-size:11px;letter-spacing:.08em;text-transform:uppercase}.live-pill{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid rgba(107,213,210,.22);border-radius:999px;color:var(--cyan);background:rgba(107,213,210,.07);font-size:10px;font-weight:800;letter-spacing:.1em}.live-pill i{width:6px;height:6px;border-radius:50%;background:var(--cyan)}
+.drop{display:block;width:100%;border:1px dashed #40516c;border-radius:16px;background:linear-gradient(145deg,rgba(25,39,64,.72),rgba(13,21,37,.68));padding:42px 22px;text-align:center;cursor:pointer;color:var(--ink);font:inherit;transition:border-color .2s,background .2s,transform .2s}.drop:hover,.drop.hot{border-color:var(--gold);background:rgba(55,48,38,.32);transform:translateY(-2px)}.drop:focus-visible{outline:2px solid var(--gold);outline-offset:4px}.drop-icon{display:grid;place-items:center;width:52px;height:52px;margin:0 auto 14px;border:1px solid rgba(214,168,91,.3);border-radius:15px;color:var(--gold);background:rgba(214,168,91,.09)}.drop .big{color:#fff;font-weight:700;font-size:15px}.drop p{margin:8px 0 0;color:var(--muted);font-size:13px}.drop-action{display:inline-block;margin-top:16px;padding:8px 12px;border:1px solid rgba(214,168,91,.4);border-radius:8px;color:var(--gold);font-size:12px;font-weight:800}.file-row{display:flex;align-items:center;gap:12px;min-height:48px;margin-top:12px;padding:10px 12px;border:1px solid #40516c;border-radius:12px;background:#0d1728}.file-row[hidden],.progress[hidden]{display:none}.file-meta{min-width:0;flex:1}.file-name{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff;font-weight:650;font-size:14px}.file-size{display:block;color:var(--muted);font-size:12px;margin-top:2px}.file-row>svg{color:var(--gold)}.icon-btn{display:inline-grid;place-items:center;width:36px;height:36px;padding:0;border:1px solid var(--line);border-radius:9px;background:transparent;color:#aeb9cc;cursor:pointer;font-size:20px}.icon-btn:hover{color:#fff;border-color:var(--gold)}.source-note{min-height:18px;margin:12px 0 0;color:var(--muted);font-size:12px}.source-note.file-active{color:var(--cyan)}
+label.fld{display:block;margin:26px 0 7px;color:#c1ccdd;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}input[type=text],textarea{width:100%;background:#0b1424;color:#edf3ff;border:1px solid var(--line);border-radius:10px;padding:12px 13px;font:inherit;font-size:14px}textarea{min-height:120px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px;line-height:1.55}input:focus,textarea:focus{outline:2px solid rgba(214,168,91,.8);outline-offset:2px;border-color:var(--gold)}textarea:disabled{opacity:.45;cursor:not-allowed}.field-help{color:#71819b;font-size:12px;margin-top:6px}.field-suggestions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.field-chip{padding:5px 8px;border:1px solid #31425e;border-radius:7px;background:#101c30;color:#9eabc0;font:inherit;font-size:11px;cursor:pointer}.field-chip:hover{border-color:var(--gold);color:#fff}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:24px}.btn{border-radius:10px!important}.row .btn-p{min-width:162px;background:var(--gold);color:#17130c;box-shadow:0 12px 24px -12px rgba(214,168,91,.65)}.row .btn-p:hover{background:#e4bc78;color:#17130c}.btn-s{background:transparent;color:#c4cfdf;border-color:#40516c!important}.btn-s:hover{color:#fff;border-color:var(--gold)!important}.btn:disabled{opacity:.6;cursor:wait;transform:none}#status{margin-top:15px;font-size:13px;min-height:22px}#status.err{color:#ff8f8f}#status.busy{color:#b9c7da}#status.ok{color:var(--cyan)}#status .hint{display:block;color:var(--muted);font-size:12px;margin-top:4px}.progress{height:3px;margin-top:9px;overflow:hidden;border-radius:99px;background:#1c2a42}.progress:before{content:"";display:block;width:35%;height:100%;border-radius:inherit;background:var(--gold);transform:translateX(-120%);animation:progress 1.1s ease-in-out infinite}@keyframes progress{to{transform:translateX(340%)}}
+#result{min-height:100%}.empty-result{display:block;min-height:390px;padding:8px 0 0;color:var(--muted)}.empty-result .empty-icon{display:grid;place-items:center;width:50px;height:50px;margin:5px 0 23px;border:1px solid rgba(107,213,210,.28);border-radius:15px;color:var(--cyan);background:rgba(107,213,210,.08)}.empty-result strong{display:block;color:#fff;font-size:23px;letter-spacing:-.03em}.empty-result>span{display:block;max-width:310px;margin-top:8px;color:var(--muted);font-size:13px;line-height:1.55}.steps{display:grid;gap:9px;margin-top:27px}.step{display:flex;align-items:center;gap:11px;padding:11px 12px;border:1px solid #263852;border-radius:10px;background:rgba(8,14,26,.4);color:#9eabc0;font-size:12px}.step b{display:grid;place-items:center;width:22px;height:22px;border-radius:7px;background:#1b2a43;color:var(--gold);font-size:11px}.example{margin-top:26px;padding:15px;border:1px solid rgba(214,168,91,.22);border-radius:12px;background:rgba(214,168,91,.05)}.example-label{color:var(--gold);font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.example code{display:block;margin-top:9px;color:#b9c7da;font:12px/1.7 ui-monospace,SFMono-Regular,Consolas,monospace}.example code span{color:var(--cyan)}.result-content{display:none}.result-head{align-items:center}.result-head h2{font-size:18px}.scroll-x{overflow:auto}table{width:100%;border-collapse:collapse;background:#0b1424;border:1px solid var(--line);border-radius:10px;overflow:hidden}th,td{padding:11px 12px;border-bottom:1px solid #1e2b42;text-align:left;font-size:13px}th{color:#8fa0ba;background:#101c30;font-size:10px;letter-spacing:.1em;text-transform:uppercase}td{color:#d8e2f2}td.val{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;word-break:break-word}td.val.null{color:#71819b;font-style:italic}pre{margin-top:15px;background:#0b1424!important;border:1px solid var(--line)!important;color:#b9c7da!important;box-shadow:none!important}.mono-raw{white-space:pre-wrap;word-break:break-word;margin:0}#result.has-result .empty-result{display:none}#result.has-result .result-content{display:block}.api-foot{display:flex;align-items:center;gap:8px;margin-top:18px;color:#71819b;font-size:11px}.api-foot svg{color:var(--cyan)}body.try-page footer{background:#080d18;border-color:#1b2639;color:#71819b}
+@media(max-width:860px){.try-hero{display:block}.hero-meta{justify-content:flex-start;margin-top:24px}.try-grid{grid-template-columns:1fr}.empty-result{min-height:300px}}@media(max-width:600px){main.wrap{padding-top:36px}.try-hero h1{font-size:45px}.hero-meta{gap:7px}.metric{min-width:82px}.workspace-card{padding:18px;border-radius:16px}.row{display:grid;grid-template-columns:1fr 1fr}.row .btn{width:100%;padding-inline:10px}.row .btn-p{grid-column:1/-1}.empty-result{min-height:0}.steps{margin-top:22px}}@media(prefers-reduced-motion:reduce){.drop,.progress:before{animation:none;transition:none}}
+@media(prefers-reduced-motion:reduce){body.try-page:before,body.try-page:after{animation:none}}
 </style>
 </head>
-<body>
-
-<header><div class="wrap"><nav>
-  <a class="brand" href="/">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 2h8l4 4v16H6z" stroke="#4ade80" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 2v4h4" stroke="#4ade80" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 12h6M9 16h4" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/></svg>
-    Fieldcast
-  </a>
-  <a href="/#how">How it works</a>
-  <a href="/#pricing">Pricing</a>
-  <a href="/for/">Use cases</a>
-  <a href="/dene.html">Try it</a>
-</nav></div></header>
-
-<main class="wrap">
-
-  <span class="tag">Free · No signup</span>
-  <h1>Try it in your browser.</h1>
-  <p class="lede">Drop a PDF or paste the text of a document, type the field names you want back — comma separated — and press <strong>Extract</strong>. The same <code>/v1/extract</code> endpoint the API uses does the work, right here.</p>
-  <p class="note">Documents are not stored. Only a call counter (key, month, calls) is recorded for billing.</p>
-
-  <div class="try-grid">
-
-    <div>
-      <div class="drop" id="drop" role="button" tabindex="0" aria-label="Drop a PDF or text file, or click to choose one">
-        <span class="big">Drop a PDF or .txt here</span>
-        <p>or click to choose a file</p>
-      </div>
-      <input type="file" id="fileInput" accept=".pdf,.txt,text/plain,application/pdf" hidden>
-      <p class="note" id="fileInfo" style="margin-top:var(--s2)">No file selected.</p>
-
-      <label class="fld" for="text">…or paste the text</label>
-      <textarea id="text" placeholder="INVOICE INV-2043&#10;Date: 14 August 2026&#10;Total: 1,240.50 EUR"></textarea>
-
-      <label class="fld" for="fields">Fields to extract — comma separated</label>
-      <input type="text" id="fields" value="invoice_number,date,total,currency" placeholder="invoice_number,date,total">
-
-      <label class="fld" for="apiKey">API key</label>
-      <input type="text" id="apiKey" value="demo_key_public" spellcheck="false" autocomplete="off">
-
-      <div class="row">
-        <button class="btn btn-p" id="run" type="button">Extract</button>
-        <button class="btn btn-s" id="reset" type="button">Clear</button>
-      </div>
-
-      <p id="status" role="status" aria-live="polite"></p>
-    </div>
-
-    <div id="result">
-      <div class="result-head">
-        <h2 style="margin:0">Result</h2>
-        <button class="btn btn-s" id="copyBtn" type="button">Copy JSON</button>
-      </div>
-      <p class="note" id="usage"></p>
-      <div class="scroll-x">
-        <table>
-          <thead><tr><th>Field</th><th>Value</th></tr></thead>
-          <tbody id="resultTable"></tbody>
-        </table>
-      </div>
-      <pre><code class="mono-raw" id="resultRaw"></code></pre>
-    </div>
-
-  </div>
-
-  <h2>Prefer the command line?</h2>
-  <pre><code>curl -X POST https://fieldcast-kopya.muhammetkarakurt1234.workers.dev/v1/extract \
-  -H "X-API-Key: demo_key_public" \
-  -H "Content-Type: application/json" \
-  -d '{"text": "INVOICE INV-2043 ... Total: 1,240.50", "fields": ["invoice_number","total"]}'</code></pre>
-
-</main>
-
-<footer><div class="wrap">
-  <p>Fieldcast — document extraction API. <a href="/">Home</a> · <a href="/for/">Use cases</a> · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></p>
-</div></footer>
-
+<body class="try-page">
+<header><div class="wrap"><nav><a class="brand" href="/"><span class="brand-mark"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 2h8l4 4v16H6z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 2v4h4M9 12h6M9 16h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>Fieldcast</a><a href="/#how">How it works</a><a href="/#pricing">Pricing</a><a href="/for/">Use cases</a><a class="active" href="/dene.html">Try it</a></nav></div></header>
+<main class="wrap"><div class="try-hero"><div><div class="eyebrow"><i></i>Fieldcast / document intelligence</div><h1>Your documents, finally queryable.</h1><p class="lede">Give Fieldcast a document and a short list of fields. Get clean, structured JSON back — ready for your agent, workflow, or database.</p></div><div class="hero-meta"><div class="metric"><b>PDF · TXT</b><span>Input formats</span></div><div class="metric"><b>40 fields</b><span>Per request</span></div><div class="metric"><b>0 storage</b><span>After extraction</span></div></div></div>
+<div class="try-grid"><section class="workspace-card" aria-labelledby="input-title"><div class="source-title"><div><h2 id="input-title">Build your request</h2><p>Drop a document or paste its text.</p></div><span class="live-pill"><i></i>LIVE DEMO</span></div>
+<button class="drop" id="drop" type="button" aria-describedby="sourceNote"><span class="drop-icon" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4m0 0L7 9m5-5 5 5M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="big">Drop your document here</span><p>PDF or plain text · processed in one request</p><span class="drop-action">Browse files</span></button>
+<input type="file" id="fileInput" accept=".pdf,.txt,text/plain,application/pdf" hidden><div class="file-row" id="fileRow" hidden><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 2h8l4 4v16H6zM14 2v4h4M9 13h6M9 17h4" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="file-meta"><span class="file-name" id="fileName"></span><span class="file-size" id="fileSize"></span></span><button class="icon-btn" id="removeFile" type="button" aria-label="Remove file">×</button></div><p class="source-note" id="sourceNote">No file selected. You can paste text below instead.</p>
+<label class="fld" for="text">Or paste document text</label><textarea id="text" placeholder="Invoice INV-2043\nDate: 2026-08-14\nTotal: EUR 1,240.50"></textarea><div class="field-help" id="textHelp">Selecting a file disables this field until you remove it.</div>
+<label class="fld" for="fields">Fields to extract</label><input id="fields" type="text" value="invoice_number,date,total,currency" spellcheck="false"><div class="field-suggestions"><button class="field-chip" type="button" data-fields="invoice_number,date,total,currency">Invoice</button><button class="field-chip" type="button" data-fields="name,email,company">Contact</button><button class="field-chip" type="button" data-fields="sku,quantity,unit_price">Line item</button></div>
+<div class="row"><button class="btn btn-p" id="run" type="button">Extract document <span aria-hidden="true">→</span></button><button class="btn btn-s" id="reset" type="button">Reset</button></div><div class="progress" id="progress" hidden></div><div id="status" aria-live="polite"></div><div class="api-foot"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 5 6v5c0 4.5 2.9 8.6 7 10 4.1-1.4 7-5.5 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>Demo mode · nothing is stored after extraction</div></section>
+<section class="workspace-card" id="result" aria-labelledby="result-title"><div class="empty-result"><div class="empty-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M4 12h16M4 17h10" stroke-linecap="round"/><path d="M18 15v5m-2.5-2.5h5" stroke-linecap="round"/></svg></div><strong>Structured output</strong><span>Your extracted fields will land here as a clean JSON response.</span><div class="steps"><div class="step"><b>01</b><span>Upload or paste a source document</span></div><div class="step"><b>02</b><span>Name the fields your workflow needs</span></div><div class="step"><b>03</b><span>Extract and copy the response</span></div></div><div class="example"><div class="example-label">Example output</div><code>{<br>&nbsp;&nbsp;<span>"invoice_number"</span>: "INV-2043",<br>&nbsp;&nbsp;<span>"total"</span>: 1240.50<br>}</code></div></div><div class="result-content"><div class="result-head"><div><h2 id="result-title">Structured result</h2><p class="note" id="usage"></p></div><button class="btn btn-s" id="copyBtn" type="button">Copy JSON</button></div><div class="scroll-x"><table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody id="resultTable"></tbody></table></div><pre><code class="mono-raw" id="resultRaw"></code></pre></div></section></div></main>
+<footer><div class="wrap"><p>Fieldcast — document extraction API. <a href="/">Home</a> · <a href="/for/">Use cases</a> · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></p></div></footer>
 <script>
-(function () {
-  var API = "/v1/extract";
-  var DEFAULT_KEY = "demo_key_public";
-
-  var el = {
-    drop: document.getElementById("drop"),
-    fileInput: document.getElementById("fileInput"),
-    fileInfo: document.getElementById("fileInfo"),
-    text: document.getElementById("text"),
-    fields: document.getElementById("fields"),
-    apiKey: document.getElementById("apiKey"),
-    run: document.getElementById("run"),
-    reset: document.getElementById("reset"),
-    status: document.getElementById("status"),
-    result: document.getElementById("result"),
-    table: document.getElementById("resultTable"),
-    raw: document.getElementById("resultRaw"),
-    usage: document.getElementById("usage"),
-    copyBtn: document.getElementById("copyBtn")
-  };
-
-  var chosenFile = null;
-  var lastJson = "";
-
-  var MESSAGES = {
-    invalid_api_key: "That API key was not accepted. Use demo_key_public, or paste your own key.",
-    quota_exceeded: "The free demo quota is used up. Paste your own API key to keep going.",
-    no_document_text: "No document to extract. Paste some text or choose a PDF / .txt file.",
-    no_fields_requested: "Enter at least one field name, comma separated.",
-    too_many_fields: "Too many fields — the limit is 40.",
-    file_unreadable: "That file could not be read as text. Try a PDF or a plain text file.",
-    extraction_failed: "The extractor could not process this document. Try again."
-  };
-
-  function setStatus(msg, kind, hint) {
-    el.status.className = kind || "";
-    el.status.textContent = msg || "";
-    if (hint) {
-      var s = document.createElement("span");
-      s.className = "hint";
-      s.textContent = hint;
-      el.status.appendChild(s);
-    }
-  }
-
-  function setFile(file) {
-    if (!file) return;
-    var ok = /\.(pdf|txt)$/i.test(file.name) || file.type === "application/pdf" || file.type === "text/plain";
-    if (!ok) {
-      setStatus("Unsupported file type. Use a PDF or a .txt file.", "err");
-      return;
-    }
-    chosenFile = file;
-    el.fileInfo.textContent = "Selected: " + file.name;
-    setStatus("File ready. Press Extract.", "");
-  }
-
-  ["dragenter", "dragover"].forEach(function (ev) {
-    el.drop.addEventListener(ev, function (e) { e.preventDefault(); el.drop.classList.add("hot"); });
-  });
-  ["dragleave", "drop"].forEach(function (ev) {
-    el.drop.addEventListener(ev, function (e) { e.preventDefault(); el.drop.classList.remove("hot"); });
-  });
-  el.drop.addEventListener("drop", function (e) {
-    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) setFile(e.dataTransfer.files[0]);
-  });
-  el.drop.addEventListener("click", function () { el.fileInput.click(); });
-  el.drop.addEventListener("keydown", function (e) {
-    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); el.fileInput.click(); }
-  });
-  el.fileInput.addEventListener("change", function () { if (el.fileInput.files.length) setFile(el.fileInput.files[0]); });
-
-  function renderRow(key, value) {
-    var tr = document.createElement("tr");
-    var tdK = document.createElement("td");
-    tdK.textContent = key;
-    var tdV = document.createElement("td");
-    tdV.className = "val";
-    if (value === null || value === undefined) {
-      tdV.className += " null";
-      tdV.textContent = "null";
-    } else if (typeof value === "object") {
-      tdV.textContent = JSON.stringify(value);
-    } else {
-      tdV.textContent = String(value);
-    }
-    tr.appendChild(tdK);
-    tr.appendChild(tdV);
-    el.table.appendChild(tr);
-  }
-
-  function showResult(data, usage) {
-    lastJson = JSON.stringify(data, null, 2);
-    el.table.textContent = "";
-    var keys = Object.keys(data);
-    if (!keys.length) {
-      renderRow("(empty)", null);
-    } else {
-      keys.forEach(function (k) { renderRow(k, data[k]); });
-    }
-    el.raw.textContent = lastJson;
-    if (usage) {
-      el.usage.textContent = "Call " + usage.used + " of " + usage.limit + " on the " + usage.plan + " plan this month.";
-    } else {
-      el.usage.textContent = "";
-    }
-    el.result.classList.add("on");
-  }
-
-  el.copyBtn.addEventListener("click", function () {
-    var done = function () {
-      el.copyBtn.textContent = "Copied";
-      setTimeout(function () { el.copyBtn.textContent = "Copy JSON"; }, 1500);
-    };
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(lastJson).then(done, function () { setStatus("Copy failed — select the JSON and copy manually.", "err"); });
-    } else {
-      setStatus("Copy is not available in this browser — select the JSON and copy manually.", "err");
-    }
-  });
-
-  el.reset.addEventListener("click", function () {
-    chosenFile = null;
-    el.fileInput.value = "";
-    el.fileInfo.textContent = "No file selected.";
-    el.text.value = "";
-    el.fields.value = "invoice_number,date,total,currency";
-    el.result.classList.remove("on");
-    setStatus("", "");
-  });
-
-  function fail(code, fallback) {
-    var msg = MESSAGES[code] || fallback || "Something went wrong. Try again.";
-    setStatus(msg, "err", code ? "error code: " + code : "");
-  }
-
-  el.run.addEventListener("click", function () {
-    el.result.classList.remove("on");
-    var fields = el.fields.value.split(",").map(function (s) { return s.trim(); }).filter(Boolean);
-    if (!fields.length) { fail("no_fields_requested"); return; }
-
-    var key = (el.apiKey.value || "").trim() || DEFAULT_KEY;
-    var text = el.text.value.trim();
-    var init = { method: "POST", headers: { "X-API-Key": key } };
-
-    if (chosenFile) {
-      var fd = new FormData();
-      fd.append("file", chosenFile);
-      fd.append("fields", fields.join(","));
-      init.body = fd;
-    } else if (text) {
-      init.headers["Content-Type"] = "application/json";
-      init.body = JSON.stringify({ text: text, fields: fields });
-    } else {
-      fail("no_document_text");
-      return;
-    }
-
-    el.run.disabled = true;
-    setStatus("Extracting…", "busy");
-
-    fetch(API, init)
-      .then(function (resp) {
-        return resp.json().catch(function () { return {}; }).then(function (body) {
-          return { status: resp.status, body: body };
-        });
-      })
-      .then(function (r) {
-        if (r.status >= 200 && r.status < 300 && r.body && r.body.data) {
-          showResult(r.body.data, r.body.usage);
-          setStatus("Done.", "ok");
-        } else {
-          var code = r.body && r.body.error;
-          fail(code, code ? null : "Request failed (HTTP " + r.status + ").");
-        }
-      })
-      .catch(function () {
-        setStatus("Could not reach the API. Check your connection and try again.", "err");
-      })
-      .then(function () { el.run.disabled = false; });
-  });
-})();
+(function(){var API="/v1/extract",DEFAULT_KEY="demo_key_public",chosenFile=null,lastJson="";var el={drop:document.getElementById("drop"),fileInput:document.getElementById("fileInput"),fileRow:document.getElementById("fileRow"),fileName:document.getElementById("fileName"),fileSize:document.getElementById("fileSize"),removeFile:document.getElementById("removeFile"),sourceNote:document.getElementById("sourceNote"),text:document.getElementById("text"),textHelp:document.getElementById("textHelp"),fields:document.getElementById("fields"),run:document.getElementById("run"),reset:document.getElementById("reset"),status:document.getElementById("status"),progress:document.getElementById("progress"),result:document.getElementById("result"),table:document.getElementById("resultTable"),raw:document.getElementById("resultRaw"),usage:document.getElementById("usage"),copyBtn:document.getElementById("copyBtn")};var MESSAGES={invalid_api_key:"The demo key was not accepted. Please try again.",quota_exceeded:"The free demo quota is used up. Please try again later.",no_document_text:"Upload a document or paste some text first.",no_fields_requested:"Enter at least one field name, comma separated.",too_many_fields:"Too many fields — the limit is 40.",file_unreadable:"That file could not be read. Try a PDF or a plain text file.",extraction_failed:"The extractor could not process this document. Try again."};function setStatus(msg,kind,hint){el.status.className=kind||"";el.status.textContent=msg||"";if(hint){var s=document.createElement("span");s.className="hint";s.textContent=hint;el.status.appendChild(s)}}function formatBytes(bytes){if(!bytes)return"0 B";var units=["B","KB","MB","GB"],i=Math.min(Math.floor(Math.log(bytes)/Math.log(1024)),units.length-1);return(bytes/Math.pow(1024,i)).toFixed(i?1:0)+" "+units[i]}function clearFile(){chosenFile=null;el.fileInput.value="";el.fileRow.hidden=true;el.text.disabled=false;el.sourceNote.textContent="No file selected. You can paste text below instead.";el.sourceNote.className="source-note";el.textHelp.textContent="Selecting a file disables this field until you remove it."}function setFile(file){if(!file)return;var ok=/\.(pdf|txt)$/i.test(file.name)||file.type==="application/pdf"||file.type==="text/plain";if(!ok){setStatus("Unsupported file type. Choose a PDF or a .txt file.","err","This file was not selected.");return}chosenFile=file;el.fileName.textContent=file.name;el.fileSize.textContent=formatBytes(file.size)+" · Ready to extract";el.fileRow.hidden=false;el.text.disabled=true;el.sourceNote.textContent="File selected. Remove it to paste text instead.";el.sourceNote.className="source-note file-active";el.textHelp.textContent="A selected file is used as the document source.";setStatus("File ready.","ok","Choose your fields, then press Extract document.")}function renderRow(key,value){var tr=document.createElement("tr"),k=document.createElement("td"),v=document.createElement("td");k.textContent=key;v.className="val";if(value===null||value===undefined){v.className+=" null";v.textContent="null"}else if(typeof value==="object")v.textContent=JSON.stringify(value);else v.textContent=String(value);tr.appendChild(k);tr.appendChild(v);el.table.appendChild(tr)}function showResult(data,usage){lastJson=JSON.stringify(data,null,2);el.table.textContent="";var keys=Object.keys(data);if(!keys.length)renderRow("(empty)",null);else keys.forEach(function(k){renderRow(k,data[k])});el.raw.textContent=lastJson;el.usage.textContent=usage?"Call "+usage.used+" of "+usage.limit+" on the "+usage.plan+" plan this month":"";el.result.classList.add("has-result")}function fail(code,fallback){setStatus(MESSAGES[code]||fallback||"Something went wrong. Try again.","err",code?"error code: "+code:"")}function clearAll(){clearFile();el.text.value="";el.fields.value="invoice_number,date,total,currency";el.result.classList.remove("has-result");setStatus("","")}el.drop.addEventListener("click",function(){el.fileInput.click()});el.fileInput.addEventListener("change",function(){if(el.fileInput.files.length)setFile(el.fileInput.files[0])});el.removeFile.addEventListener("click",clearFile);["dragenter","dragover"].forEach(function(ev){el.drop.addEventListener(ev,function(e){e.preventDefault();el.drop.classList.add("hot")})});["dragleave","drop"].forEach(function(ev){el.drop.addEventListener(ev,function(e){e.preventDefault();el.drop.classList.remove("hot")})});el.drop.addEventListener("drop",function(e){if(e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files.length)setFile(e.dataTransfer.files[0])});el.text.addEventListener("input",function(){if(chosenFile&&el.text.value){clearFile();setStatus("Text mode selected.","ok")}});el.reset.addEventListener("click",clearAll);document.querySelectorAll(".field-chip").forEach(function(chip){chip.addEventListener("click",function(){el.fields.value=chip.getAttribute("data-fields")})});el.copyBtn.addEventListener("click",function(){if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(lastJson).then(function(){el.copyBtn.textContent="Copied";setTimeout(function(){el.copyBtn.textContent="Copy JSON"},1500)},function(){setStatus("Copy failed — select the JSON and copy manually.","err")});else setStatus("Copy is not available in this browser — select the JSON and copy manually.","err")});el.run.addEventListener("click",function(){el.result.classList.remove("has-result");var fields=el.fields.value.split(",").map(function(s){return s.trim()}).filter(Boolean);if(!fields.length){fail("no_fields_requested");return}var text=el.text.value.trim(),init={method:"POST",headers:{"X-API-Key":DEFAULT_KEY}};if(chosenFile){var fd=new FormData();fd.append("file",chosenFile);fd.append("fields",fields.join(","));init.body=fd}else if(text){init.headers["Content-Type"]="application/json";init.body=JSON.stringify({text:text,fields:fields})}else{fail("no_document_text");return}el.run.disabled=true;el.progress.hidden=false;setStatus(chosenFile?"Reading your document…":"Extracting your text…","busy","This can take a few seconds.");fetch(API,init).then(function(resp){return resp.json().catch(function(){return{}}).then(function(body){return{status:resp.status,body:body}})}).then(function(r){if(r.status>=200&&r.status<300&&r.body&&r.body.data){showResult(r.body.data,r.body.usage);setStatus("Done.","ok","Your structured JSON is ready below")}else{var code=r.body&&r.body.error;fail(code,code?"Request failed (HTTP "+r.status+").":"Request failed.")}}).catch(function(){setStatus("Could not reach the API. Check your connection and try again.","err")}).then(function(){el.run.disabled=false;el.progress.hidden=true})})})();
 </script>
 </body>
 </html>

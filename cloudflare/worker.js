@@ -1,4 +1,4 @@
-// Fieldcast Cloudflare Worker (26 Eki 2026): Vercel YOK.
+// Fieldcast Cloudflare Worker: Cloudflare only.
 // Statik site ../public'ten (Workers assets). API burada:
 //   POST /v1/extract  -> json {text, fields[]} veya multipart file + fields (api/index.py ile ayni sozlesme)
 //   GET  /health
@@ -16,12 +16,22 @@ const X402_GATE = "https://157-173-122-86.sslip.io/base";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "Content-Type, X-API-Key, X-PAYMENT",
+  "Access-Control-Allow-Headers": "Content-Type, X-API-Key, X-PAYMENT, PAYMENT-SIGNATURE",
+  "Access-Control-Expose-Headers": "X-PAYMENT-RESPONSE, PAYMENT-RESPONSE, PAYMENT-REQUIRED",
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
 };
 
 function json(body, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json", ...CORS } });
+}
+
+function track(ctx, env, event, durationMs = 0, chars = 0) {
+  if (!env.ANALYTICS || !ctx?.waitUntil) return;
+  ctx.waitUntil(Promise.resolve().then(() => env.ANALYTICS.writeDataPoint({
+    blobs: ["/v1/extract", event],
+    doubles: [durationMs, chars],
+    indexes: [event],
+  })).catch(() => {}));
 }
 
 function prompt(text, fields) {
@@ -114,37 +124,65 @@ async function belgeOku(env, req) {
   return { text, fields };
 }
 
-async function extract(env, req) {
+async function gate(req, yol) {
+  const h = new Headers(req.headers);
+  for (const k of ["host", "cf-connecting-ip", "x-forwarded-for", "x-real-ip", "cookie"]) h.delete(k);
+  const r = await fetch(X402_GATE + yol, {
+    method: req.method, headers: h,
+    body: req.method === "GET" || req.method === "HEAD" ? undefined : req.body, duplex: "half",
+  });
+  const out = new Headers(r.headers);
+  for (const [k, v] of Object.entries(CORS)) out.set(k, v);
+  return new Response(r.body, { status: r.status, headers: out });
+}
+
+async function extract(env, req, ctx) {
+  const started = Date.now();
   const key = req.headers.get("X-API-Key") || "";
   const plan = API_KEYS[key];
-  if (!plan) return json({ error: "invalid_api_key" }, 401);
+  if (!plan) {
+    // No valid API key -> paid x402 path (Base mainnet USDC) via the gate.
+    track(ctx, env, "x402", Date.now() - started);
+    return gate(req, "/v1/extract" + new URL(req.url).search);
+  }
   // ponytail: kalici aylik kota yok; IP basina dakikada 10 cagri (Cloudflare rate limit, depolama yok).
   // Gercek musteri anahtarlari gelince KV/D1'de aylik sayac.
   const ip = req.headers.get("CF-Connecting-IP") || "?";
   if (env.DENEME_SINIRI && !(await env.DENEME_SINIRI.limit({ key: ip })).success) {
+    track(ctx, env, "quota_exceeded", Date.now() - started);
     return json({ error: "quota_exceeded", plan, detail: "rate limit: 10 calls per minute" }, 429);
   }
   const { text, fields, hata } = await belgeOku(env, req);
   if (hata) return hata;
   try {
-    return json({ data: await extractFields(env, text, fields), chars_processed: text.length });
+    const data = await extractFields(env, text, fields);
+    track(ctx, env, "ok", Date.now() - started, text.length);
+    return json({ data, chars_processed: text.length });
   } catch (e) {
+    track(ctx, env, "extraction_failed", Date.now() - started, text.length);
     return json({ error: "extraction_failed", detail: String(e.message).slice(0, 200) }, 502);
   }
 }
 
 export default {
-  async fetch(req, env) {
+  async fetch(req, env, ctx) {
     const u = new URL(req.url);
     if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
-    if (u.pathname === "/health") return json({ status: "ok", time: new Date().toISOString().slice(0, 19) });
+    if (u.pathname === "/health") {
+      try {
+        const r = await fetch(X402_GATE + "/health", { signal: AbortSignal.timeout(8000) });
+        const g = await r.json();
+        return json({ status: r.ok ? "ok" : "degraded", time: new Date().toISOString().slice(0, 19), x402: g });
+      } catch (e) {
+        return json({ status: "degraded", time: new Date().toISOString().slice(0, 19), x402: "unreachable" }, 503);
+      }
+    }
     if (u.pathname === "/v1/extract") {
-      return req.method === "POST" ? extract(env, req) : json({ error: "method_not_allowed" }, 405);
+      return req.method === "POST" ? extract(env, req, ctx) : json({ error: "method_not_allowed" }, 405);
     }
     if (u.pathname === "/x402/extract" || u.pathname === "/x402/health") {
       const yol = u.pathname === "/x402/extract" ? "/v1/extract" : "/health";
-      const r = await fetch(X402_GATE + yol + u.search, { method: req.method, headers: req.headers, body: req.body, duplex: "half" });
-      return new Response(r.body, { status: r.status, headers: { ...Object.fromEntries(r.headers), ...CORS } });
+      return gate(req, yol + u.search);
     }
     return env.ASSETS.fetch(req);
   },
