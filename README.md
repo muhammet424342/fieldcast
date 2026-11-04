@@ -2,7 +2,7 @@
 
 **Documents in, structured JSON out. One API call.**
 
-Live: **https://fieldcast-peach.vercel.app**
+Live: **https://fieldcast-kopya.muhammetkarakurt1234.workers.dev**
 
 ## Hackathon submission
 
@@ -18,7 +18,7 @@ in the document comes back `null` rather than a fabricated value.
 No templates to configure. No model to pick. No training data.
 
 ```bash
-curl -X POST https://fieldcast-peach.vercel.app/v1/extract \
+curl -X POST https://fieldcast-kopya.muhammetkarakurt1234.workers.dev/v1/extract \
   -H "X-API-Key: demo_key_public" \
   -H "Content-Type: application/json" \
   -d '{
@@ -113,7 +113,7 @@ already in `api/pay.py`.
 | `public/.well-known/x402` | `/.well-known/x402` | Endpoint, price `$0.01`, network `eip155:8453`, and the extraction description. |
 | `public/.well-known/a2a.json` | `/.well-known/a2a.json` | Short agent card: name, URL, the extract skill, and the same payment object. |
 
-`vercel.json` already sends `/(.*)` to `/public/$1`, which is how these paths
+The Cloudflare Worker (`cloudflare/wrangler.jsonc`) serves `public/` as static assets, which is how these paths
 are published. A route that names `/openapi.json` and `/.well-known/*`
 explicitly is not in this change.
 
@@ -127,8 +127,10 @@ NVIDIA_API_KEY=... X402_PAY_TO=0x... python api/pay.py
 
 ## Deploying
 
+Fieldcast runs on Cloudflare Workers (no Vercel). From `cloudflare/`:
+
 ```bash
-npx vercel --prod
+npx wrangler deploy
 ```
 
 Environment variables:
