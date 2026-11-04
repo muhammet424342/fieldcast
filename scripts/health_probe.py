@@ -80,6 +80,8 @@ WORKER_ISARETI = "x-fieldcast-layer"
 CHECKPOINT_METINLERI = ("Security Checkpoint",)
 
 KRITIK = "CRITIK"
+# Durust kimlik: urllib varsayilan UA Cloudflare 1010 (bot imzasi) engeline takiliyor.
+USER_AGENT = "fieldcast-health-probe/1.0 (+https://github.com/muhammet424342/fieldcast)"
 UYARI = "UYARI"
 TAMAM = "TAMAM"
 
@@ -216,7 +218,7 @@ def _yollari_gozden_gecir(nesne, yol):
 def tek_uc(yol, url, zaman):
     """Bir ucu GET ile dener ve Bulgu doner."""
     tam = urllib.parse.urljoin(url if url.endswith("/") else url + "/", yol.lstrip("/"))
-    istek = urllib.request.Request(tam, headers={"Accept": "application/json"})
+    istek = urllib.request.Request(tam, headers={"Accept": "application/json", "User-Agent": USER_AGENT})
     basliklar = {}
     govde = ""
     kod = None
