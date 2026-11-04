@@ -1,0 +1,12 @@
+name = "fieldcast-x402"
+main = "worker/x402-proxy.js"
+compatibility_date = "2026-10-12"
+workers_dev = true
+
+[vars]
+SITE_URL = "https://fieldcast-kopya.muhammetkarakurt1234.workers.dev"
+X402_ORIGIN = "https://fieldcast-kopya.muhammetkarakurt1234.workers.dev"
+X402_NETWORK = "eip155:8453"
+X402_PRICE = "$0.01"
+X402_FACILITATOR_URL = "https://api.cdp.coinbase.com/platform/v2/x402"
+X402_PAY_TO = "0x3f425d6ffd2855585483d65da684651e330759e0"

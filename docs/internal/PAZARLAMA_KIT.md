@@ -10,7 +10,7 @@ Aşağıda her katman için ayrı varyant var. Kayıt yaparken sadece ilgili blo
 | Alan | Değer |
 |---|---|
 | Ürün adı | Fieldcast |
-| URL | `https://fieldcast-peach.vercel.app` — **CANLI** (26 Ağu 2026) |
+| URL | `https://fieldcast-kopya.muhammetkarakurt1234.workers.dev` — **CANLI** (26 Ağu 2026) |
 | Kategori | Developer Tools / AI / Document Processing |
 | Fiyat modeli | Freemium (Free 50/ay, Starter $19, Pro $49, x402 $0.01/çağrı) |
 | Kurucu | Muhammet Karakurt |
@@ -112,7 +112,7 @@ Aşağıda her katman için ayrı varyant var. Kayıt yaparken sadece ilgili blo
 
 | Eksik | Engel seviyesi | Not |
 |---|---|---|
-| ~~Canlı public URL~~ | ✅ TAMAM | `fieldcast-peach.vercel.app` — SSO koruması kapatıldı, `noindex` yok, çıkarım canlı test edildi |
+| ~~Canlı public URL~~ | ✅ TAMAM | `fieldcast-kopya.muhammetkarakurt1234.workers.dev` — SSO koruması kapatıldı, `noindex` yok, çıkarım canlı test edildi |
 | ~~PNG logo + favicon~~ | ✅ TAMAM | 1024 / 512 / 512-şeffaf PNG + favicon.ico + apple-touch-icon üretildi |
 | 5-8 ürün ekran görüntüsü 1920×1080 | 🔴 SERT | Tier 1 dizinlerin çoğu zorunlu tutuyor. **Tek kalan sert engel.** |
 | 60-90 sn demo videosu | 🟡 ORTA | Product Hunt'ta 2,7× daha fazla upvote. Sessiz ekran kaydı serbest (25 Ağu kararı) |

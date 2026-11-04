@@ -27,7 +27,7 @@ sistem python3 ile ayni sonucu verir; hicbir sey kurulmaz.
 KULLANIM
 --------
     python3 scripts/health_probe.py
-    python3 scripts/health_probe.py --url https://fieldcast-peach.vercel.app
+    python3 scripts/health_probe.py --url https://fieldcast-kopya.muhammetkarakurt1234.workers.dev
     python3 scripts/health_probe.py --url <worker> --json
     python3 scripts/health_probe.py --strict        # uyarilari da hata say
 
@@ -48,7 +48,7 @@ import urllib.parse
 import urllib.request
 
 # README'de yazan canli adres. Varsayilan bu; --url ile degistirilir.
-VARSAYILAN_URL = os.environ.get("FIELDCAST_URL", "https://fieldcast-peach.vercel.app").strip()
+VARSAYILAN_URL = os.environ.get("FIELDCAST_URL", "https://fieldcast-kopya.muhammetkarakurt1234.workers.dev").strip()
 
 # Vercel'in guvenlik KATMANININ izleri. Bunlar cevabi degistirmis demektir:
 # istek uygulamaya ulasmamis, Vercel bot sinyali yakalayip baska bir sey

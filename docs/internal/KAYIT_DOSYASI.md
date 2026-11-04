@@ -12,7 +12,7 @@ Chrome'da giriş yapmış durumda kaldıktan sonra formları ben doldurup gönde
 | Form alanı | Değer |
 |---|---|
 | Product name | `Fieldcast` |
-| Website / URL | `https://fieldcast-peach.vercel.app` |
+| Website / URL | `https://fieldcast-kopya.muhammetkarakurt1234.workers.dev` |
 | Tagline (kısa) | `Documents in, structured JSON out. One API call.` |
 | 60 karakter açıklama | `Turn PDFs and invoices into structured JSON in one API call.` |
 | Category | Developer Tools → API / Document Processing |
@@ -24,8 +24,8 @@ Chrome'da giriş yapmış durumda kaldıktan sonra formları ben doldurup gönde
 | Logo (PNG) | `ekran_goruntuleri/` yanındaki `public/logo-1024.png` |
 | Şeffaf logo | `public/logo-512-transparent.png` |
 | Favicon | `public/favicon.ico` |
-| Gizlilik | `https://fieldcast-peach.vercel.app/privacy.html` |
-| Şartlar | `https://fieldcast-peach.vercel.app/terms.html` |
+| Gizlilik | `https://fieldcast-kopya.muhammetkarakurt1234.workers.dev/privacy.html` |
+| Şartlar | `https://fieldcast-kopya.muhammetkarakurt1234.workers.dev/terms.html` |
 | Tags | `api, document-parsing, pdf-to-json, invoice-extraction, data-extraction, ai-agents, x402, developer-tools` |
 
 **Ekran görüntüsü sırası** (dizin kaç tane isterse baştan al):

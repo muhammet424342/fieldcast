@@ -1,6 +1,6 @@
 # Fieldcast — İlk Müşteri Ulaşım Kiti
 
-**Canlı:** https://fieldcast-peach.vercel.app
+**Canlı:** https://fieldcast-kopya.muhammetkarakurt1234.workers.dev
 **Gönderen:** muhammet@decaylabs.online (DKIM/SPF/DMARC kurulu, warmup yapıldı)
 
 ---
@@ -112,7 +112,7 @@ Bu, sıfır müşterisi olan tek kişilik bir ürünün elindeki en güçlü ham
 >
 > Ten-field invoice, live: all ten correct in 1.8 seconds. Same endpoint on a receipt in a different currency and date format: every field right, and four fields that weren't in the document came back null instead of fabricated.
 >
-> Free tier is 50 a month if you want to try it yourself: fieldcast-peach.vercel.app
+> Free tier is 50 a month if you want to try it yourself: fieldcast-kopya.muhammetkarakurt1234.workers.dev
 
 *(60 kelime)*
 

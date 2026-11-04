@@ -33,7 +33,7 @@
 // zorundadir. Deger verilmezse Worker "hangi uca gidecegimi bilmiyorum"
 // diyerek 503 verir; yanlis adrese istek atmayi dener.
 
-const VARSAYILAN_SITE = "https://fieldcast-peach.vercel.app"; // README'deki canli adres
+const VARSAYILAN_SITE = "https://fieldcast-kopya.muhammetkarakurt1234.workers.dev"; // README'deki canli adres (Cloudflare; Vercel kapandi)
 
 // API yollari: sunucudaki uygulamaya aktarilir.
 const API_ONEKLERI = ["/x402/", "/v1/", "/health", "/.well-known/x402"];

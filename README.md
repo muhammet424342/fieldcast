@@ -151,7 +151,7 @@ The mainnet path and the testnet path are separate. Mainnet does not fall back t
 `eip155:84532` when the CDP key is missing. Testnet uses `X402_FACILITATOR_URL`
 (code default `https://facilitator.payai.network`) and does not read the CDP key.
 Mainnet facilitator URL is `https://api.cdp.coinbase.com/platform/v2/x402`, built
-from the two CDP variables. Changing these on Vercel is a separate step; this
+from the two CDP variables. These are set wherever `api/pay.py` runs (today the origin server behind the Cloudflare Worker, not Cloudflare itself); this
 table is the code contract.
 
 | Variable | Required on mainnet | Role |
@@ -185,7 +185,7 @@ figures and product claims live in one place instead of drifting across three fi
 ## Known limits
 
 - No OCR — PDF and plain text only, scanned images are not supported.
-- The usage counter lives in `/tmp` on Vercel and resets on cold start.
+- The usage counter is not yet kept in a durable store (it was in `/tmp` on the old Vercel deploy); treat quotas as best-effort.
 - Extraction runs on third-party model providers, so documents leave the service.
 - Beta, run by one developer. No SLA.
 

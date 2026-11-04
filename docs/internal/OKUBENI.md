@@ -3,12 +3,11 @@
 Belge (PDF / duz metin) -> yapilandirilmis JSON. Alan adlarini sen verirsin,
 tipli JSON geri gelir. Bulunamayan alan `null` doner, uydurulmaz.
 
-## Vercel'e alma
+## Cloudflare'a alma (Vercel artik kullanilmiyor)
 
-    npx vercel login
-    npx vercel --prod
+    cd cloudflare && npx wrangler deploy
 
-Sonra Vercel panelinden **Settings -> Environment Variables**:
+API anahtarlari Worker'da `npx wrangler secret put` ile, sunucudaki API'de ise kendi .env dosyasinda tutulur:
 
 | Degisken | Deger | Zorunlu |
 |---|---|---|
@@ -50,6 +49,6 @@ neden dustugunu yazan acik hata doner. Sessiz korlesme yok.
 
 ## Not
 
-Kullanim sayaci Vercel'de `/tmp` altinda tutulur ve her soguk baslatmada
-sifirlanir. Gercek kota takibi icin kalici bir veri deposu gerekir
+Kullanim sayaci henuz kalici bir depoda degil (eski Vercel kurulumunda `/tmp`
+altindaydi ve soguk baslatmada sifirlaniyordu). Gercek kota takibi icin kalici bir veri deposu gerekir
 (ilk odeme geldikten sonraki is).
