@@ -92,6 +92,10 @@ BEKLENEN = {
     "/x402/health": ("status", "network", "testnet", "price", "pay_to", "facilitator"),
     "/.well-known/x402": ("x402Version", "service", "resources"),
 }
+# Cloudflare Worker semasi: {"ok": true, "networks": [...], "price": "..."}.
+WORKER_HEALTH_ALANLARI = ("ok", "networks", "price")
+# Worker'da bulunmasi gereken ag (CAIP-2). PROBE_NETWORK ile degistirilebilir.
+BEKLENEN_AG = os.environ.get("PROBE_NETWORK", "eip155:8453")
 
 
 class Bulgu(object):
@@ -313,6 +317,9 @@ def tek_uc(yol, url, zaman):
             {"url": tam, "hata": hata_mesaji, "govde": _ozet(govde)},
         )
 
+    if yol == "/x402/health" and "status" not in nesne and "ok" in nesne:
+        return _worker_health(nesne, yol, katman, kod, tam, govde)
+
     sorun = _yollari_gozden_gecir(nesne, yol)
     if sorun:
         durum, mesaj = sorun
@@ -331,6 +338,25 @@ def tek_uc(yol, url, zaman):
         )
 
     return Bulgu(yol, TAMAM, "200 + beklenen JSON", katman, kod, {"url": tam})
+
+
+def _worker_health(nesne, yol, katman, kod, tam, govde):
+    """Worker semasi: ok true, networks beklenen agi icermeli, price dolu."""
+    ayr = {"url": tam, "govde": _ozet(govde)}
+    eksik = [a for a in WORKER_HEALTH_ALANLARI if a not in nesne]
+    if eksik:
+        return Bulgu(yol, KRITIK, "200 dondu ama eksik alan: %s" % ", ".join(eksik), katman, kod, ayr)
+    if nesne.get("ok") is not True:
+        return Bulgu(yol, KRITIK, "ok=%r: odeme ucu kendini sagliksiz bildiriyor" % nesne.get("ok"), katman, kod, ayr)
+    aglar = nesne.get("networks")
+    if not isinstance(aglar, list) or BEKLENEN_AG not in aglar:
+        return Bulgu(yol, KRITIK, "networks icinde %s yok: %r" % (BEKLENEN_AG, aglar), katman, kod, ayr)
+    if not isinstance(nesne.get("price"), str) or not nesne.get("price").strip():
+        return Bulgu(yol, KRITIK, "price bos ya da gecersiz", katman, kod, ayr)
+    # Istege bagli odeme alanlari varsa onlar da saglikli olmali.
+    if "pay_to" in nesne and not nesne.get("pay_to"):
+        return Bulgu(yol, UYARI, "uc ayakta ama pay_to bos", katman, kod, ayr)
+    return Bulgu(yol, TAMAM, "200 + ok=true, %s mevcut, price=%s" % (BEKLENEN_AG, nesne["price"]), katman, kod, {"url": tam})
 
 
 def prob(temel_url, zaman=10.0, yollar=None):
