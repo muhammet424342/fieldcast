@@ -241,7 +241,7 @@ class TestHealthCiktisi(unittest.TestCase):
         self.assertEqual(govde["network"], MAINNET)
         self.assertIs(govde["testnet"], False)
         self.assertEqual(govde["para"], "GERCEK USDC")
-        self.assertEqual(govde["aciklama"], "Base (ana ag, gercek USDC)")
+        self.assertEqual(govde["aciklama"], "Base mainnet (real USDC)")
 
     def test_testnet_agda_sanal_para_yaziyor(self):
         yanit = pay_modulu({"X402_NETWORK": TESTNET}).app.test_client().get("/x402/health")

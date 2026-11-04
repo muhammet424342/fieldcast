@@ -154,7 +154,7 @@ def sartlar(modul):
 SAHTE_SAGLIKLI = {
     "/x402/health": {
         "status": "ok", "network": MAINNET, "testnet": False, "para": "GERCEK USDC",
-        "aciklama": "Base (ana ag, gercek USDC)", "price": "$0.01",
+        "aciklama": "Base mainnet (real USDC)", "price": "$0.01",
         "pay_to": ANA_ADRES, "facilitator": PAYAI,
     },
     "/.well-known/x402": {

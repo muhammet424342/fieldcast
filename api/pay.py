@@ -69,7 +69,7 @@ def cdp_create_headers(key_id, secret):
             from cdp.x402 import create_cdp_auth_headers
         except ImportError as exc:
             raise RuntimeError(
-                "ana ag facilitator basligi icin cdp paketi gerekli"
+                "the cdp package is required for the mainnet facilitator headers"
             ) from exc
         return create_cdp_auth_headers(key_id, secret)()
 
@@ -99,8 +99,8 @@ def facilitator_ayari_kur():
 
 FACILITATOR_AYARI = facilitator_ayari_kur()
 AG_ETIKETI = (
-    "Base (ana ag, gercek USDC)" if not IS_TESTNET
-    else f"test agi ({NETWORK}, sanal para)"
+    "Base mainnet (real USDC)" if not IS_TESTNET
+    else f"testnet ({NETWORK}, test funds)"
 )
 
 # Aciklamasi iki yerde kullaniliyor (odeme katmani ROUTES + kesif ucu). Tek

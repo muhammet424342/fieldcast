@@ -28,11 +28,10 @@ NVIDIA_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
 #   minimax-m3 10/10 1.5sn | kimi-k3 10/10 2.7sn
 #   mistral-nemotron 10/10 3.7sn | llama-3.1-70b 10/10 4.2sn
 # llama-3.1-8b listede YOK: 8/10, tarih normalizasyonunu kaciriyor.
+# 26 Eki 2026: yukaridaki 4 model NVIDIA'da EOL (410). Canli Worker ile ayni liste.
 NVIDIA_MODELS = [
-    "minimaxai/minimax-m3",
-    "moonshotai/kimi-k3",
-    "mistralai/mistral-nemotron",
-    "meta/llama-3.1-70b-instruct",
+    "nvidia/nemotron-3.5-bolt-e4b",
+    "minimaxai/minimax-m3.1-flash",
 ]
 
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "").strip()

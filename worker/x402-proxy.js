@@ -351,8 +351,8 @@ export default {
           error: "not_a_fieldcast_route",
           layer: WORKER_DEGERI,
           detail:
-            "Bu Worker yalnizca /x402/*, /v1/*, /health, /.well-known/x402 " +
-            "ve resmi site yollarini (/, /docs) tanir.",
+            "This Worker only serves /x402/*, /v1/*, /health, /.well-known/x402 " +
+            "and the site paths (/, /docs).",
           path: url.pathname,
         },
         404,
@@ -371,9 +371,9 @@ const hedef = originUrl(env, url.pathname + url.search);
     if (!hedef) {
       // Bu bir Worker hatasidir (yapilandirma), uygulamanin degil.
       const mesaj =
-        "X402_ORIGIN ayarli degil. Worker ucun nereye aktaracagini bilmiyor; " +
-        "sunucudaki Fieldcast uygulamasinin PUBLIK https adresi verilmeli " +
-        "(127.0.0.1 Edge'den ulasilamaz).";
+        "X402_ORIGIN is not set, so the Worker does not know where to forward; " +
+        "set it to the public https URL of the Fieldcast origin " +
+        "(127.0.0.1 is not reachable from the edge).";
       console.error(`[x402-proxy] katman=${WORKER_DEGERI} yol=${url.pathname} hata=origin_not_configured`);
       return json(
         {
@@ -426,8 +426,8 @@ const hedef = originUrl(env, url.pathname + url.search);
           layer: "vercel",
           culprit: "vercel",
           detail:
-            "Upstream Vercel guvenlik katmani istegi kesmis (bot sinyali). " +
-            "Bu bir Worker hatasi degil; sayfa gecirilmedi.",
+            "The upstream security layer blocked the request (bot signal). " +
+            "This is not a Worker error; the page was not passed through.",
           marker: isaret.ad,
           path: url.pathname,
         },

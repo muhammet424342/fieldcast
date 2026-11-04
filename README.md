@@ -4,13 +4,6 @@
 
 Live: **https://fieldcast-kopya.muhammetkarakurt1234.workers.dev**
 
-## Hackathon submission
-
-- **Buyer agent code:** [`buyer-agent/`](buyer-agent/) — the agent that decides whether a
-  document is worth paying for and pays for it itself over x402. Its own README:
-  [`buyer-agent/README.md`](buyer-agent/README.md).
-- **Demo video:** https://youtu.be/WZyBKLm_svs
-
 You send a PDF or raw text plus a list of field names. Fieldcast returns those fields
 as typed JSON — numbers as numbers, dates normalised to ISO-8601. A field that is not
 in the document comes back `null` rather than a fabricated value.
@@ -63,21 +56,16 @@ and are not persisted; only a usage counter is stored.
 
 ## Extraction engine
 
-NVIDIA-hosted models first (free), DeepSeek as a paid last resort. Measured on the same
-ten-field invoice:
+The live Cloudflare Worker (`cloudflare/worker.js`) reads PDF text with Workers AI
+`toMarkdown`, then asks NVIDIA-hosted models in order, with Workers AI as the fallback:
 
-| Model | Score | Time |
-|---|---|---|
-| `minimaxai/minimax-m3` (retired Sept 2026) | 10/10 | 1.5s |
-| `moonshotai/kimi-k3` | 10/10 | 2.7s |
-| `mistralai/mistral-nemotron` | 10/10 | 3.7s |
-| `meta/llama-3.1-70b-instruct` | 10/10 | 4.2s |
-| `meta/llama-3.1-8b-instruct` | 8/10 | 1.2s — misses date normalisation, excluded |
+1. `nvidia/nemotron-3.5-bolt-e4b`
+2. `minimaxai/minimax-m3.1-flash`
+3. `@cf/meta/llama-3.3-70b-instruct-fp8-fast` (Workers AI)
 
-`minimaxai/minimax-m3` is retired: NVIDIA dropped it in September 2026. Its row is kept with
-the score and time recorded while it was served. At runtime it is still tried first, fails, and
-the next model takes over. The scores and times above are from that recorded run — they are not
-re-measured here.
+In an internal check on 26 October 2026 (3 hard sample documents, 16 fields) both NVIDIA
+models returned 16/16. That is a small internal test, not a benchmark. The Python origin
+(`api/index.py`) uses the same two NVIDIA models and falls back to DeepSeek (`deepseek-chat`).
 
 If a model fails the next one is tried. If every provider fails the request returns 502
 with which provider failed and why — it does not silently degrade.
@@ -92,7 +80,7 @@ to the x402 Bazaar for discovery.
 **Status:** the public `x402.org` facilitator only advertises testnets
 (`eip155:84532` yes, `eip155:8453` no). Base mainnet (`eip155:8453`) builds its
 facilitator from `CDP_API_KEY_ID` and `CDP_API_KEY_SECRET`. If either is missing,
-`POST /x402/extract` returns HTTP 503 with the detail `ana ag icin CDP anahtari gerekli`.
+`POST /x402/extract` returns HTTP 503.
 The network is not switched to Base Sepolia. An empty `X402_PAY_TO` also returns 503
 and does not serve free extractions. CDP keys are not written into the source.
 
@@ -127,7 +115,7 @@ NVIDIA_API_KEY=... X402_PAY_TO=0x... python api/pay.py
 
 ## Deploying
 
-Fieldcast runs on Cloudflare Workers (no Vercel). From `cloudflare/`:
+Fieldcast runs on Cloudflare Workers. From `cloudflare/`:
 
 ```bash
 npx wrangler deploy
@@ -185,9 +173,9 @@ figures and product claims live in one place instead of drifting across three fi
 ## Known limits
 
 - No OCR — PDF and plain text only, scanned images are not supported.
-- The usage counter is not yet kept in a durable store (it was in `/tmp` on the old Vercel deploy); treat quotas as best-effort.
+- The usage counter is not yet kept in a durable store; treat quotas as best-effort.
 - Extraction runs on third-party model providers, so documents leave the service.
-- Beta, run by one developer. No SLA.
+- Beta, run by one developer. No SLA, and no external users yet.
 
 ## Licence
 
