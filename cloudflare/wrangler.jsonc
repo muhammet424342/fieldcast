@@ -1,4 +1,4 @@
-// Fieldcast canli yayin (26 Eki 2026): her sey Cloudflare'de, Vercel YOK.
+// Fieldcast canli yayin (26 Eki 2026): her sey Cloudflare Workers uzerinde.
 // Yayin: cd cloudflare && npx wrangler@4 deploy   (NVIDIA anahtari: npx wrangler@4 secret put NVIDIA_API_KEY)
 {
   "name": "fieldcast",

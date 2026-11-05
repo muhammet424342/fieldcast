@@ -21,8 +21,8 @@ istendiginde uc bedava cikarim servisine donusmez.
 import os
 import sys
 
-# Vercel her giris noktasini yol uzerinden import ediyor ve api/ klasorunu
-# sys.path'e KOYMUYOR -> "No module named 'index'" ile fonksiyon komple coker.
+# Dosya baska bir dizinden calistirilinca api/ klasoru
+# sys.path'te olmuyor -> "No module named 'index'" ile fonksiyon komple coker.
 # Kendi klasorumuzu yola ekliyoruz; yerelde de ayni sekilde calisir.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -31,7 +31,7 @@ from flask import Flask, g, jsonify, request
 # Cikarim mantigi tek yerde durur (api/index.py); burada yeniden yazilmaz.
 from index import db, extract_fields, read_document_from_request, record_call
 
-# Ucunun kimligi. Hepsi ENV ile override edilebilir; Vercel'de .env yazilir.
+# Ucunun kimligi. Hepsi ENV ile override edilebilir; sunucuda ortamdan okunur.
 # X402_PAY_TO="" verilirse adres bilerek boslasir -> uc 503 doner (asagiya bak).
 # Ana ag: CDP anahtari varsa CDP facilitator'i, yoksa PayAI (asagiya bak).
 PAY_TO = os.environ.get(
@@ -169,7 +169,7 @@ def well_known_x402():
 
     Neden ayri bir dosya degil de uc: ajanlar once ucu dener, 404 alirsa
     "bu hizmet odemeli degil" sanir. Canli 5 Eki 2026'da bu adres 404 donuyordu
-    (x-vercel-error: NOT_FOUND); o yuzden eklendi.
+    (eski barindirmada NOT_FOUND); o yuzden eklendi.
 
 ICERIK UYDURULMAZ: manifest, odeme katmaninin gercekten kullandigi
     PAY_TO/NETWORK/PRICE/X402_ACIKLAMA degerlerinden turetilir; ayni degerler
@@ -282,7 +282,7 @@ def extract():
 # Boylece "adres unutuldu" durumu bedava cikarim servisine donusmez.
 
 # Bazaar kesif uzantisi agir dogrulama zinciri cekiyor (idna + ek modüller).
-# Vercel'de korumali istekte surec iz birakmadan oluyordu; kapatilabilir yapildi
+# Eski barindirmada korumali istekte surec iz birakmadan oluyordu; kapatilabilir yapildi
 # ki odeme katmani uzantidan bagimsiz test edilebilsin.
 BAZAAR = os.environ.get("X402_BAZAAR", "1").strip() not in ("0", "false", "no")
 

@@ -8,8 +8,8 @@ kaza ile degismesin. once kasif onerisiyle varsayilanlar su sekilde degisti:
   X402_FACILITATOR_URL  https://x402.org/facilitator  ->  https://facilitator.payai.network
   X402_PAY_TO           "" (kapali)                  ->  0x3f425d6ffd2855585483d65da684651e330759e0
 
-Ucunun de ENV ile override edilebilir kalmasi da ayri bir test konusu: Vercel'de
-.env yazilacak, kod icinde gomulu kalmayacak.
+Ucunun de ENV ile override edilebilir kalmasi da ayri bir test konusu: sunucuda
+ortamdan okunacak, kod icinde gomulu kalmayacak.
 
 Calistirma:
   python3 -m unittest discover -s tests -v
@@ -176,7 +176,7 @@ def sartlar(modul, govde=None):
 
 
 class TestVarsayilanlar(unittest.TestCase):
-    """Ortam degistirilmeden (yani Vercel .env'siz) gorulen degerler."""
+    """Ortam degistirilmeden (yani .env'siz) gorulen degerler."""
 
     def setUp(self):
         self.pay = pay_modulu()
@@ -204,7 +204,7 @@ class TestVarsayilanlar(unittest.TestCase):
 
 
 class TestOrtamOverride(unittest.TestCase):
-    """Uc deger de ENV ile degistirilebiliyor olmali (Vercel .env)."""
+    """Uc deger de ENV ile degistirilebiliyor olmali (sunucu ortami)."""
 
     def test_ag_testnete_cevrilebiliyor(self):
         pay = pay_modulu({"X402_NETWORK": TESTNET})

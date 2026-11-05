@@ -3,7 +3,7 @@
 Belge (PDF / duz metin) -> yapilandirilmis JSON. Alan adlarini sen verirsin,
 tipli JSON geri gelir. Bulunamayan alan `null` doner, uydurulmaz.
 
-## Cloudflare'a alma (Vercel artik kullanilmiyor)
+## Cloudflare'a alma
 
     cd cloudflare && npx wrangler deploy
 
@@ -49,6 +49,6 @@ neden dustugunu yazan acik hata doner. Sessiz korlesme yok.
 
 ## Not
 
-Kullanim sayaci henuz kalici bir depoda degil (eski Vercel kurulumunda `/tmp`
-altindaydi ve soguk baslatmada sifirlaniyordu). Gercek kota takibi icin kalici bir veri deposu gerekir
+Kullanim sayaci henuz kalici bir depoda degil (su an surec icinde tutuluyor;
+yeniden baslatmada sifirlanabilir). Gercek kota takibi icin kalici bir veri deposu gerekir
 (ilk odeme geldikten sonraki is).

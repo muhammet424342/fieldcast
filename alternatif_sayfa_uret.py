@@ -18,7 +18,7 @@ import html
 import json
 import pathlib
 
-CANLI = "https://fieldcast-peach.vercel.app"
+CANLI = "https://fieldcast-kopya.muhammetkarakurt1234.workers.dev"
 CIKTI = pathlib.Path(__file__).parent / "public" / "alternatives"
 CIKTI.mkdir(parents=True, exist_ok=True)
 

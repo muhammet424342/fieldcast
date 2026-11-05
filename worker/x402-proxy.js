@@ -1,7 +1,7 @@
 // Fieldcast x402 proxy - Cloudflare Worker (workers.dev, ucretsiz kota).
 //
 // NE YAPAR
-// Odeme ucunu Vercel'e baglamadan sunabilir hale getirir. Worker sirada bir
+// Odeme ucunu tek bir barindiriciya baglamadan sunabilir hale getirir. Worker sirada bir
 // vektor degildir:
 //   1) Resmi site yollari (/, /docs) RESMI SITE olarak isaretlenir: Worker
 //      bunlari kendisi API diye degil, "site burada" diye isaretler ve
@@ -33,12 +33,12 @@
 // zorundadir. Deger verilmezse Worker "hangi uca gidecegimi bilmiyorum"
 // diyerek 503 verir; yanlis adrese istek atmayi dener.
 
-const VARSAYILAN_SITE = "https://fieldcast-kopya.muhammetkarakurt1234.workers.dev"; // README'deki canli adres (Cloudflare; Vercel kapandi)
+const VARSAYILAN_SITE = "https://fieldcast-kopya.muhammetkarakurt1234.workers.dev"; // README'deki canli adres (Cloudflare)
 
 // API yollari: sunucudaki uygulamaya aktarilir.
 const API_ONEKLERI = ["/x402/", "/v1/", "/health", "/.well-known/x402"];
 
-// Resmi site yollari: Vercel'de kalir, Worker burada ayirir ve isaretler.
+// Resmi site yollari: SITE_URL'de (Cloudflare) kalir, Worker burada ayirir ve isaretler.
 const SITE_YOLLARI = ["/", "/docs"];
 
 // Worker'in KENDI cevaplarinda kullandigi iz. Saglik probu (scripts/health_probe.py)

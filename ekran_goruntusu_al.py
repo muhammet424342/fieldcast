@@ -10,7 +10,7 @@ import time
 
 from playwright.sync_api import sync_playwright
 
-CANLI = "https://fieldcast-peach.vercel.app"
+CANLI = "https://fieldcast-kopya.muhammetkarakurt1234.workers.dev"
 CIKTI = pathlib.Path(__file__).parent / "ekran_goruntuleri"
 CIKTI.mkdir(exist_ok=True)
 
