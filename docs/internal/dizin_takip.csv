@@ -32,3 +32,4 @@ Sira,Katman,Dizin,URL,DR,Dofollow,Ucret,Varyant,Durum,Kayit_Tarihi,Listeleme_URL
 31,1,BetaList,https://betalist.com,64,Evet,Ucretsiz,Katman1,Bekliyor,,,2-4 hafta kuyruk. Simdi gonder ki lansmanda yetissin
 32,1,Product Hunt,https://producthunt.com,91,Evet,Ucretsiz,Katman1,Beklemede,,,ANA OLAY. 3 hafta isinma + demo video gerekli. EN SON
 33,1,Hacker News Show HN,https://news.ycombinator.com,91,Nofollow,Ucretsiz,Katman1,Beklemede,,,Sadece x402 acisiyla. Baslik: Show HN: Fieldcast - document extraction an AI agent can pay for
+34,4,x402scan,https://www.x402scan.com/resources/register,,Evet,Ucretsiz,Katman4,YAYINDA,2026-11-15,x402scan.com,3/3 uç kayıtlı: /x402/extract + cron-next + link-check (openapi.json'dan okur)
