@@ -31,6 +31,44 @@
           "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
         }
       ]
+    },
+    {
+      "method": "POST",
+      "path": "/x402/cron-next",
+      "endpoint": "https://fieldcast-kopya.muhammetkarakurt1234.workers.dev/x402/cron-next",
+      "mimeType": "application/json",
+      "description": "Cron next runs. POST JSON {cron: \"*/15 9-17 * * 1-5\", count?: 10 (max 50), from?: ISO-8601}. Validates the 5-field cron expression and returns the next N fire times in UTC. Invalid expressions return 400 and are not charged.",
+      "price": "$0.001",
+      "network": "eip155:8453",
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "payTo": "0x3f425d6ffd2855585483d65da684651e330759e0",
+          "price": "$0.001",
+          "amount": "1000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/x402/link-check",
+      "endpoint": "https://fieldcast-kopya.muhammetkarakurt1234.workers.dev/x402/link-check",
+      "mimeType": "application/json",
+      "description": "Link checker. POST JSON {urls: [up to 25 http(s) URLs]}. Returns per-URL HTTP status, ok flag, redirect count and final URL, following redirects hop by hop. Only public hosts are fetched.",
+      "price": "$0.005",
+      "network": "eip155:8453",
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "payTo": "0x3f425d6ffd2855585483d65da684651e330759e0",
+          "price": "$0.005",
+          "amount": "5000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+        }
+      ]
     }
   ]
 }

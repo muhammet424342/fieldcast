@@ -24,28 +24,32 @@ for (const [name, value] of Object.entries({ PAY_TO, DOCPARSE_GATEWAY_KEY: UPSTR
 
 const app = express();
 app.set("trust proxy", true); // nginx terminates TLS; keep https in the advertised resource URL
-// JSON (text + fields) and multipart PDF share one ceiling. Multipart is kept raw so the
-// boundary reaches upstream unchanged.
-const BODY_LIMIT = "5mb";
-const jsonParser = express.json({ limit: BODY_LIMIT });
-const multipartParser = express.raw({ type: () => true, limit: BODY_LIMIT });
-
-app.use((req, res, next) => {
-  const type = String(req.headers["content-type"] || "");
-  if (type.toLowerCase().includes("multipart/form-data")) return multipartParser(req, res, next);
-  return jsonParser(req, res, next);
-});
+app.use(express.json({ limit: "2mb" }));
+// PDF uploads: keep multipart and raw PDF bodies as bytes so they can be forwarded after payment.
+app.use(express.raw({ type: ["multipart/form-data", "application/pdf"], limit: "2mb" }));
+const RESOURCE = process.env.GATE_RESOURCE || undefined;
 
 app.get("/base/health", (_req, res) => res.json({ ok: true, networks: NETWORKS, price: PRICE }));
+
+// Small JSON utilities proxied to the same upstream (adapted from in-house prototypes).
+const TOOLS = [
+  ["/v1/cron-next", "$0.001", "Cron next runs: POST {cron:\"*/15 9-17 * * 1-5\", count?:10, from?:ISO} -> validated expression and the next N fire times in UTC."],
+  ["/v1/link-check", "$0.005", "Link checker: POST {urls:[up to 25]} -> per-URL HTTP status, ok flag, redirect count and final URL. Public hosts only."],
+];
 
 app.use(
   paymentMiddleware(
     {
       "POST /base/v1/extract": {
+        resource: RESOURCE,
         accepts: NETWORKS.map((network) => ({ scheme: "exact", price: PRICE, network, payTo: PAY_TO })),
-        description: "Fieldcast: send document text (JSON) or a PDF (multipart file + fields), get those fields back as typed JSON.",
+        description: "Fieldcast: send document text (JSON), a PDF (multipart file + fields, or application/pdf with ?fields=a,b), get those fields back as typed JSON.",
         mimeType: "application/json",
       },
+      ...Object.fromEntries(TOOLS.map(([path, price, description]) => [
+        `POST /base${path}`,
+        { resource: `https://fieldcast-kopya.muhammetkarakurt1234.workers.dev/x402${path.slice(3)}`, accepts: NETWORKS.map((network) => ({ scheme: "exact", price, network, payTo: PAY_TO })), description, mimeType: "application/json" },
+      ])),
     },
     NETWORKS.reduce(
       (server, network) => server.register(network, new ExactEvmScheme()),
@@ -54,43 +58,54 @@ app.use(
   ),
 );
 
+// Builds the upstream request: JSON {text, fields}, multipart passthrough, or raw PDF wrapped as multipart.
+export function upstreamRequest(req) {
+  const ct = String(req.headers["content-type"] || "");
+  const headers = { "X-API-Key": UPSTREAM_KEY };
+  if (Buffer.isBuffer(req.body) && ct.startsWith("multipart/form-data")) {
+    return { headers: { ...headers, "Content-Type": ct }, body: req.body };
+  }
+  if (Buffer.isBuffer(req.body) && ct.startsWith("application/pdf")) {
+    const form = new FormData();
+    form.append("file", new Blob([req.body], { type: "application/pdf" }), String(req.query.filename || "document.pdf"));
+    form.append("fields", String(req.query.fields || ""));
+    return { headers, body: form };
+  }
+  return { headers: { ...headers, "Content-Type": "application/json" }, body: JSON.stringify({ text: req.body?.text, fields: req.body?.fields }) };
+}
+
 app.post("/base/v1/extract", async (req, res) => {
-  const type = String(req.headers["content-type"] || "");
-  const multipart = type.toLowerCase().includes("multipart/form-data");
   try {
-    const headers = { "X-API-Key": UPSTREAM_KEY };
-    let body;
-    if (multipart) {
-      headers["Content-Type"] = type;
-      body = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0);
-    } else {
-      headers["Content-Type"] = "application/json";
-      body = JSON.stringify({ text: req.body?.text, fields: req.body?.fields });
-    }
+    const { headers, body } = upstreamRequest(req);
     const upstream = await fetch(`${UPSTREAM}/v1/extract`, {
       method: "POST",
       headers,
       body,
       signal: AbortSignal.timeout(90_000),
     });
-    const raw = Buffer.from(await upstream.arrayBuffer());
     // Non-2xx here means the middleware does not settle, so a failed extraction is not charged.
-    res.status(upstream.status);
-    res.setHeader("Content-Type", upstream.headers.get("content-type") || "application/json");
-    res.end(raw);
+    res.status(upstream.status).json(await upstream.json());
   } catch (err) {
     res.status(502).json({ error: "upstream_unreachable", detail: String(err).slice(0, 200) });
   }
 });
 
-app.use((err, req, res, next) => {
-  if (err && (err.status === 413 || err.statusCode === 413 || err.type === "entity.too.large")) {
-    res.status(413).json({ error: "payload_too_large" });
-    return;
-  }
-  next(err);
-});
+for (const [path] of TOOLS) {
+  app.post(`/base${path}`, async (req, res) => {
+    try {
+      const upstream = await fetch(`${UPSTREAM}${path}`, {
+        method: "POST",
+        headers: { "X-API-Key": UPSTREAM_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify(req.body ?? {}),
+        signal: AbortSignal.timeout(90_000),
+      });
+      res.status(upstream.status).json(await upstream.json()); // non-2xx is not settled, so not charged
+    } catch (err) {
+      res.status(502).json({ error: "upstream_unreachable", detail: String(err).slice(0, 200) });
+    }
+  });
+}
 
-app.listen(PORT, "127.0.0.1", () =>
+if (process.env.GATE_NO_LISTEN !== "1") app.listen(PORT, "127.0.0.1", () =>
   console.log(`fieldcast gate on 127.0.0.1:${PORT} networks=${NETWORKS.join(",")} payTo=${PAY_TO} facilitator=${FACILITATOR_URL}`),
 );
