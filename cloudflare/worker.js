@@ -14,6 +14,7 @@ const API_KEYS = { demo_key_public: "demo" };
 const MAX_CHARS = 20000;
 const MAX_FIELDS = 40;
 const X402_GATE = "https://157-173-122-86.sslip.io/base";
+const X402_YOL = { "/x402/extract": "/v1/extract", "/x402/health": "/health", "/x402/cron-next": "/v1/cron-next", "/x402/link-check": "/v1/link-check" };
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -185,8 +186,8 @@ export default {
     if (u.pathname === "/v1/extract") {
       return req.method === "POST" ? extract(env, req, ctx) : json({ error: "method_not_allowed" }, 405);
     }
-    if (u.pathname === "/x402/extract" || u.pathname === "/x402/health") {
-      const yol = u.pathname === "/x402/extract" ? "/v1/extract" : "/health";
+    const yol = X402_YOL[u.pathname];
+    if (yol) {
       return gate(req, yol + u.search);
     }
     return env.ASSETS.fetch(req);

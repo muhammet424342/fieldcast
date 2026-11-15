@@ -38,7 +38,10 @@
             "multipart/form-data": {
               "schema": {
                 "type": "object",
-                "required": ["file", "fields"],
+                "required": [
+                  "file",
+                  "fields"
+                ],
                 "properties": {
                   "file": {
                     "type": "string",
@@ -55,7 +58,9 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["fields"],
+                "required": [
+                  "fields"
+                ],
                 "properties": {
                   "text": {
                     "type": "string",
@@ -63,7 +68,9 @@
                   },
                   "fields": {
                     "type": "array",
-                    "items": { "type": "string" },
+                    "items": {
+                      "type": "string"
+                    },
                     "maxItems": 40,
                     "description": "Names of the fields to extract."
                   }
@@ -71,7 +78,12 @@
               },
               "example": {
                 "text": "INVOICE #2026-114\nDate: 14 August 2026\nSubtotal: 1200.00\nTotal: 1416.00",
-                "fields": ["invoice_number", "date", "subtotal", "total"]
+                "fields": [
+                  "invoice_number",
+                  "date",
+                  "subtotal",
+                  "total"
+                ]
               }
             }
           }
@@ -81,7 +93,9 @@
             "description": "Extraction result. Missing fields are null.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/InvoiceExtraction" },
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceExtraction"
+                },
                 "example": {
                   "data": {
                     "invoice_number": "2026-114",
@@ -98,7 +112,9 @@
             "description": "Payment required. Terms are in the PAYMENT-REQUIRED header. accepts[0] is the object below.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/PaymentRequired" }
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentRequired"
+                }
               }
             }
           },
@@ -113,29 +129,277 @@
           }
         }
       }
+    },
+    "/x402/cron-next": {
+      "post": {
+        "operationId": "x402CronNext",
+        "summary": "Next fire times of a cron expression (UTC). 0.001 USDC.",
+        "description": "Validates a standard 5-field cron expression and returns its next N fire times in UTC. Unpaid calls return HTTP 402 with the payment terms; invalid input returns 400 and is not charged.",
+        "x-x402": {
+          "accepts": [
+            {
+              "scheme": "exact",
+              "network": "eip155:8453",
+              "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+              "amount": "1000",
+              "payTo": "0x3f425d6ffd2855585483d65da684651e330759e0",
+              "maxTimeoutSeconds": 300,
+              "extra": {
+                "name": "USD Coin",
+                "version": "2"
+              }
+            }
+          ]
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "cron"
+                ],
+                "properties": {
+                  "cron": {
+                    "type": "string"
+                  },
+                  "count": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 50,
+                    "default": 10
+                  },
+                  "from": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              },
+              "example": {
+                "cron": "*/15 9-17 * * 1-5",
+                "count": 3
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Result",
+            "content": {
+              "application/json": {
+                "example": {
+                  "cron": "*/15 9-17 * * 1-5",
+                  "timezone": "UTC",
+                  "next_runs": [
+                    "2026-11-16T09:00:00Z",
+                    "2026-11-16T09:15:00Z",
+                    "2026-11-16T09:30:00Z"
+                  ]
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "cron": {
+                      "type": "string"
+                    },
+                    "timezone": {
+                      "type": "string"
+                    },
+                    "next_runs": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input (not charged)"
+          },
+          "402": {
+            "description": "Payment required"
+          }
+        }
+      }
+    },
+    "/x402/link-check": {
+      "post": {
+        "operationId": "x402LinkCheck",
+        "summary": "Check up to 25 URLs for broken links. 0.005 USDC.",
+        "description": "Fetches each URL, follows redirects hop by hop (public hosts only) and returns status, ok flag, redirect count and final URL. Unpaid calls return HTTP 402 with the payment terms; invalid input returns 400 and is not charged.",
+        "x-x402": {
+          "accepts": [
+            {
+              "scheme": "exact",
+              "network": "eip155:8453",
+              "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+              "amount": "5000",
+              "payTo": "0x3f425d6ffd2855585483d65da684651e330759e0",
+              "maxTimeoutSeconds": 300,
+              "extra": {
+                "name": "USD Coin",
+                "version": "2"
+              }
+            }
+          ]
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "urls"
+                ],
+                "properties": {
+                  "urls": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "minItems": 1,
+                    "maxItems": 25
+                  }
+                }
+              },
+              "example": {
+                "urls": [
+                  "https://example.com",
+                  "https://example.com/missing"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Result",
+            "content": {
+              "application/json": {
+                "example": {
+                  "checked": 2,
+                  "broken": 1,
+                  "results": [
+                    {
+                      "url": "https://example.com",
+                      "ok": true,
+                      "status": 200,
+                      "redirects": 0,
+                      "final_url": "https://example.com"
+                    },
+                    {
+                      "url": "https://example.com/missing",
+                      "ok": false,
+                      "status": 404,
+                      "redirects": 0,
+                      "final_url": "https://example.com/missing"
+                    }
+                  ]
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "checked": {
+                      "type": "integer"
+                    },
+                    "broken": {
+                      "type": "integer"
+                    },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string"
+                          },
+                          "ok": {
+                            "type": "boolean"
+                          },
+                          "status": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ]
+                          },
+                          "redirects": {
+                            "type": "integer"
+                          },
+                          "final_url": {
+                            "type": "string"
+                          },
+                          "error": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input (not charged)"
+          },
+          "402": {
+            "description": "Payment required"
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
       "InvoiceExtraction": {
         "type": "object",
-        "required": ["data", "chars_processed"],
+        "required": [
+          "data",
+          "chars_processed"
+        ],
         "properties": {
           "data": {
             "type": "object",
             "description": "One key per requested field. A field that is not in the document is null. Dates are ISO-8601. Monetary values are numbers.",
             "properties": {
-              "invoice_number": { "type": ["string", "null"] },
+              "invoice_number": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "date": {
-                "type": ["string", "null"],
+                "type": [
+                  "string",
+                  "null"
+                ],
                 "description": "ISO-8601 date (YYYY-MM-DD)."
               },
-              "subtotal": { "type": ["number", "null"] },
-              "total": { "type": ["number", "null"] }
+              "subtotal": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "total": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
             },
             "additionalProperties": true
           },
-          "chars_processed": { "type": "integer" }
+          "chars_processed": {
+            "type": "integer"
+          }
         },
         "example": {
           "data": {
@@ -150,34 +414,97 @@
       "X402Accept": {
         "type": "object",
         "description": "Same payTo, network, and amount as the unpaid response accepts[0]. amount 10000 is 0.01 USDC (6 decimals).",
-        "required": ["scheme", "network", "asset", "amount", "payTo", "maxTimeoutSeconds", "extra"],
+        "required": [
+          "scheme",
+          "network",
+          "asset",
+          "amount",
+          "payTo",
+          "maxTimeoutSeconds",
+          "extra"
+        ],
         "properties": {
-          "scheme": { "type": "string", "enum": ["exact"] },
-          "network": { "type": "string", "enum": ["eip155:8453"] },
-          "asset": { "type": "string", "enum": ["0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"] },
-          "amount": { "type": "string", "enum": ["10000"] },
-          "payTo": { "type": "string", "enum": ["0x3f425d6ffd2855585483d65da684651e330759e0"] },
-          "maxTimeoutSeconds": { "type": "integer", "enum": [300] },
+          "scheme": {
+            "type": "string",
+            "enum": [
+              "exact"
+            ]
+          },
+          "network": {
+            "type": "string",
+            "enum": [
+              "eip155:8453"
+            ]
+          },
+          "asset": {
+            "type": "string",
+            "enum": [
+              "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+            ]
+          },
+          "amount": {
+            "type": "string",
+            "enum": [
+              "10000"
+            ]
+          },
+          "payTo": {
+            "type": "string",
+            "enum": [
+              "0x3f425d6ffd2855585483d65da684651e330759e0"
+            ]
+          },
+          "maxTimeoutSeconds": {
+            "type": "integer",
+            "enum": [
+              300
+            ]
+          },
           "extra": {
             "type": "object",
-            "required": ["name", "version"],
+            "required": [
+              "name",
+              "version"
+            ],
             "properties": {
-              "name": { "type": "string", "enum": ["USD Coin"] },
-              "version": { "type": "string", "enum": ["2"] }
+              "name": {
+                "type": "string",
+                "enum": [
+                  "USD Coin"
+                ]
+              },
+              "version": {
+                "type": "string",
+                "enum": [
+                  "2"
+                ]
+              }
             }
           }
         }
       },
       "PaymentRequired": {
         "type": "object",
-        "required": ["x402Version", "accepts"],
+        "required": [
+          "x402Version",
+          "accepts"
+        ],
         "properties": {
-          "x402Version": { "type": "integer", "enum": [2] },
-          "error": { "type": "string" },
+          "x402Version": {
+            "type": "integer",
+            "enum": [
+              2
+            ]
+          },
+          "error": {
+            "type": "string"
+          },
           "accepts": {
             "type": "array",
             "minItems": 1,
-            "items": { "$ref": "#/components/schemas/X402Accept" }
+            "items": {
+              "$ref": "#/components/schemas/X402Accept"
+            }
           }
         }
       }
